@@ -20,9 +20,13 @@ MainWindow::MainWindow(QWidget *parent) :
     if(ret <= 0)
     {
         USB_CAN_status = 1;
+       // ui->deviceIndexComboBox->se
+
+        ui->Connect_USB_CAN->setText(tr("无设备"));
     }
     else
     {
+        ui->Connect_USB_CAN->setText(tr("连接CAN"));
         ui->deviceIndexComboBox->setMaxCount(ret);
     }
     //初始化部分按钮的状态
@@ -42,6 +46,7 @@ MainWindow::~MainWindow()
 void MainWindow::Time_update()
 {
     timeout_flag = 1;
+  //  waitforreadyread()
     qDebug() << "timeout_flag = 1;";
 }
 
@@ -364,8 +369,10 @@ void MainWindow::on_scanNodeAction_triggered()
  * */
 void MainWindow::on_setbaudRatePushButton_clicked()
 {
+
     int ret;
-    CAN_INIT_CONFIG CAN_InitConfig;
+
+
     if(ui->allNodeCheckBox->isChecked())
     {
         if(ui->nodeListTableWidget->rowCount()<=0)
@@ -382,6 +389,8 @@ void MainWindow::on_setbaudRatePushButton_clicked()
             return;
         }
     }
+    /*
+     *    CAN_INIT_CONFIG CAN_InitConfig;
     bool ConfFlag = DeviceConfig();
     if(!ConfFlag)
     {
@@ -395,15 +404,8 @@ void MainWindow::on_setbaudRatePushButton_clicked()
     CAN_InitConfig.CAN_SJW = CANBaudRateTab[CAN_GetBaudRateNum(baud)].SJW;
     CAN_InitConfig.CAN_BS1 = CANBaudRateTab[CAN_GetBaudRateNum(baud)].BS1;
     CAN_InitConfig.CAN_BS2 = CANBaudRateTab[CAN_GetBaudRateNum(baud)].BS2;
-    uint16_t NodeAddr;
-    if(ui->allNodeCheckBox->isChecked())
-    {
-        NodeAddr = 0x00;
-    }
-    else
-    {
-        NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
-    }
+
+
     ret = CAN_BL_SetNewBaudRate(ui->deviceIndexComboBox->currentIndex(),
                                 ui->channelIndexComboBox->currentIndex(),
                                 NodeAddr,
@@ -418,6 +420,26 @@ void MainWindow::on_setbaudRatePushButton_clicked()
     }
     ui->baudRateComboBox->setCurrentIndex(ui->newBaudRateComboBox->currentIndex());
     USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
+    */
+    uint16_t NodeAddr;
+    if(ui->allNodeCheckBox->isChecked())
+    {
+        NodeAddr = 0x00;
+    }
+    else
+    {
+        NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
+    }
+   ret  = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,0x120,50);
+    if(ret == 1)
+        {
+              qDebug() << "数据擦除成功";
+        }
+    else
+        {
+            qDebug() << "失败";
+        }
+
 }
 
 void MainWindow::on_contactUsAction_triggered()
@@ -449,13 +471,6 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 {
     int ret;
     bool state;
-    ui->baudRateComboBox->setEnabled(false);
-    ui->deviceIndexComboBox->setEnabled(false);
-    ui->channelIndexComboBox->setEnabled(false);
-    if(USB_CAN_status == 1)
-        {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无设备连接！"));
-        }
     state = VCI_OpenDevice(4,ui->deviceIndexComboBox->currentIndex(),0);
     if(!state)
     {
@@ -463,6 +478,21 @@ void MainWindow::on_Connect_USB_CAN_clicked()
          USB_CAN_status = 2;
         return;
     }
+    else
+        {
+            if(USB_CAN_status == 1)
+                {
+                    USB_CAN_status = 0;
+                     ui->Connect_USB_CAN->setText(tr("连接CAN"));
+                }
+
+        }
+    if(USB_CAN_status == 1)
+        {
+
+            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无设备连接！"));
+        }
+
     CBL_CMD_LIST CMD_List;
     QString cmdStr[]={"Erase","WriteInfo","Write","Check","SetBaudRate","Excute","CmdSuccess","CmdFaild"};
     uint8_t cmdData[16];
@@ -519,6 +549,9 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             ui->updateFirmwarePushButton->setEnabled(true);
              ui->newBaudRateComboBox->setEnabled(true);
              ui->allNodeCheckBox->setEnabled(true);
+             ui->baudRateComboBox->setEnabled(false);
+             ui->deviceIndexComboBox->setEnabled(false);
+             ui->channelIndexComboBox->setEnabled(false);
              USB_CAN_status = 0x04;
              VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
         }
@@ -560,6 +593,9 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             ui->updateFirmwarePushButton->setEnabled(true);
             ui->newBaudRateComboBox->setEnabled(true);
             ui->allNodeCheckBox->setEnabled(true);
+            ui->baudRateComboBox->setEnabled(false);
+            ui->deviceIndexComboBox->setEnabled(false);
+            ui->channelIndexComboBox->setEnabled(false);
              USB_CAN_status = 0x04;
              VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),0);
              VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),1);
@@ -705,6 +741,80 @@ int MainWindow::CAN_BL_init(PCBL_CMD_LIST pCmdList)
 
 int   MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut)
 {
+      //  WaitCommEvent()
+    int ret;
+    bootloader_data Bootloader_data ;
+    int i,read_num;
+    VCI_CAN_OBJ can_send_msg,can_read_msg[1000];
+    Bootloader_data.DLC = 4;
+    Bootloader_data.ExtId.bit.cmd = cmd_list.Erase;
+    Bootloader_data.ExtId.bit.addr = NodeAddr;
+    Bootloader_data.ExtId.bit.reserve = 0;
+    Bootloader_data.IDE = CAN_ID_EXT;
+    Bootloader_data.data[0] = ( FlashSize & 0xFF000000 ) >> 24;
+    Bootloader_data.data[1] = ( FlashSize & 0xFF0000 ) >> 16;
+    Bootloader_data.data[2] = ( FlashSize & 0xFF00 ) >> 8;
+    Bootloader_data.data[3] = ( FlashSize & 0x00FF );
+    VCI_ClearBuffer(4,DevIndex,CANIndex);
+    can_send_msg.DataLen = Bootloader_data.DLC;
+    can_send_msg.SendType = 1;
+    can_send_msg.RemoteFlag = 0;
+    can_send_msg.ExternFlag = Bootloader_data.IDE;
+    can_send_msg.ID = Bootloader_data.ExtId.all;
+    for(i = 0;i<Bootloader_data.DLC;i++)
+        {
+            can_send_msg.Data[i] = Bootloader_data.data[i];
+        }
+    ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
+    if(ret == -1)
+    {
+     return 1;
+    }
+    QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);
+    if(timeout_flag == 1)
+        {
+            timeout_flag = 0;
+             read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
+        }
+        else
+        {
+            read_num = 0;
+        }
+
+    if(read_num == 0)
+        {
+            return 1;
+        }
+    else if(read_num == -1)
+        {
+            return 1;
+        }
+    else
+        {
+            ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
+            if(ret == -1)
+            {
+                return 1;
+                VCI_ClearBuffer(4,DevIndex,CANIndex);
+            }
+            if(ret == 1)
+            {
+//判断返回结果
+                if(can_read_msg[0].ID == (Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                    {
+                        return 0;
+                        qDebug()<<"成功擦除数据";
+                    }
+                    else
+                    {
+                        qDebug()<<"数据无效";
+                        return 1;
+                    }
+
+            }
+        }
+
+    VCI_ClearBuffer(4,DevIndex,CANIndex);
     return 0;
 }
 
