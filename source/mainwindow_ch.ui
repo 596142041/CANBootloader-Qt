@@ -149,6 +149,9 @@
               <property name="text">
                <string>01</string>
               </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
              </item>
              <item row="2" column="0">
               <property name="text">
@@ -604,6 +607,7 @@
     <addaction name="openFirmwareFileAction"/>
     <addaction name="exitAction"/>
     <addaction name="action_Open_CAN"/>
+    <addaction name="action_Close_CAN"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -691,7 +695,7 @@
   <action name="action_Open_CAN">
    <property name="icon">
     <iconset resource="image.qrc">
-     <normaloff>:/images/gif_48_006.gif</normaloff>:/images/gif_48_006.gif</iconset>
+     <normaloff>:/images/gif_48_081.gif</normaloff>:/images/gif_48_081.gif</iconset>
    </property>
    <property name="text">
     <string>连接CAN</string>
@@ -703,6 +707,15 @@
    </property>
    <property name="toolTip">
     <string>calc</string>
+   </property>
+  </action>
+  <action name="action_Close_CAN">
+   <property name="icon">
+    <iconset resource="image.qrc">
+     <normaloff>:/images/gif_48_078.gif</normaloff>:/images/gif_48_078.gif</iconset>
+   </property>
+   <property name="text">
+    <string>断开</string>
    </property>
   </action>
  </widget>
