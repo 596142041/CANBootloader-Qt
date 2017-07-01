@@ -104,6 +104,8 @@ private slots:
     void Time_update();
     void on_action_Open_CAN_triggered();
 
+    void on_action_Close_CAN_triggered();
+
     private:
     Ui::MainWindow *ui;
      Boot_CMD_LIST cmd_list;

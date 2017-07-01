@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         ui->Connect_USB_CAN->setText(tr("连接CAN"));
         ui->deviceIndexComboBox->setMaxCount(ret);
+        ui->deviceIndexComboBox->addItem(tr("USB_CAN"),Qt::DisplayRole);
     }
     //初始化部分按钮的状态
     ui->Close_CAN->setEnabled(false);
@@ -430,6 +431,7 @@ void MainWindow::on_setbaudRatePushButton_clicked()
     {
         NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
     }
+    /*
    ret  = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,0x120,50);
     if(ret == 1)
         {
@@ -438,6 +440,17 @@ void MainWindow::on_setbaudRatePushButton_clicked()
     else
         {
             qDebug() << "失败";
+        }
+        */
+    if(ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),1)->text() == "APP")
+        {
+ qDebug() << "CAN_BL_BOOT";
+            CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_BOOT);
+        }
+        else
+        {
+             qDebug() << "CAN_BL_APP";
+             CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
         }
 
 }
@@ -475,12 +488,13 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     if(!state)
     {
         QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("打开设备失败！"));
-         USB_CAN_status = 2;
+         ui->Connect_USB_CAN->setText(tr("无设备"));
+         USB_CAN_status = 1;
         return;
     }
     else
         {
-            if(USB_CAN_status == 1)
+            if((USB_CAN_status == 1)||(USB_CAN_status == 0))
                 {
                     USB_CAN_status = 0;
                      ui->Connect_USB_CAN->setText(tr("连接CAN"));
@@ -667,6 +681,15 @@ void MainWindow::on_Close_CAN_clicked()
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
 }
+void MainWindow::on_action_Open_CAN_triggered()
+{
+on_Connect_USB_CAN_clicked();
+}
+
+void MainWindow::on_action_Close_CAN_triggered()
+{
+    on_Close_CAN_clicked();
+}
 //------------------------------------------------------------------------
 //以下函数是根据自己的CAN设备进行编写
 int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut)
@@ -822,12 +845,31 @@ int   MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr
 {
     return 0;
 }
-int   CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type)
+int   MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type)
 {
-    return 0;
+        int ret = 0;
+        bootloader_data Bootloader_data ;
+        VCI_ClearBuffer(4,DevIndex,CANIndex);
+        VCI_CAN_OBJ can_send_msg;
+        Bootloader_data.ExtId.bit.reserve = 0x00;
+        Bootloader_data.ExtId.bit.cmd = cmd_list.Excute;
+        Bootloader_data.ExtId.bit.addr = NodeAddr;
+        can_send_msg.DataLen = 4;
+        can_send_msg.SendType = 1;
+        can_send_msg.RemoteFlag = 0;
+        can_send_msg.ExternFlag = 1;
+        can_send_msg.ID = Bootloader_data.ExtId.all;
+        can_send_msg.Data[0] =Type&0x000000FF;
+        can_send_msg.Data[1] =Type&0x000000FF;
+        can_send_msg.Data[2] =Type&0x000000FF;
+        can_send_msg.Data[3] =Type&0x000000FF;
+        ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
+        if(ret == -1)
+        {
+         return 1;
+        }
+        VCI_ClearBuffer(4,DevIndex,CANIndex);
+        return 0;
 }
 
-void MainWindow::on_action_Open_CAN_triggered()
-{
-on_Connect_USB_CAN_clicked();
-}
+
