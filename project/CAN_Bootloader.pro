@@ -31,7 +31,8 @@ HEADERS += \
     ../source/mainwindow.h \
     ../source/usb_device.h \
     ../source/usb2can.h \
-    ../source/scandevrangedialog.h
+    ../source/scandevrangedialog.h \
+    ../source/ControlCAN.h
 
 SOURCES += \
     ../source/main.cpp \
