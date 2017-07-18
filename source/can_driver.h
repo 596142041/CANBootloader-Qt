@@ -44,67 +44,67 @@
 #define  FW_TYPE_BOOT 0x55555555
 typedef struct _PACK_INFO
 {
-    unsigned char      data_len;
+    unsigned short int data_len;
     unsigned long  int data_addr;
     unsigned long  int data_base_addr;
     unsigned short int data_addr_offset;
     unsigned char      data_type;
-    unsigned char      Data[64];
+    unsigned short int      Data[64];
 }PACK_INFO;
 
 //----------------------
-typedef struct _bootloader_data
+typedef struct _Bootloader_data
 {
-        union
+    union
+    {
+         unsigned long int all;
+        struct
         {
-                unsigned long int all;
-                struct
-                {
-                        unsigned short int cmd     :4; //命令
-                        unsigned short int addr    :12; //设备地址
-                        unsigned short int reserve :16; //保留位
-                }bit;
-        } ExtId; //扩展帧ID
-        unsigned char IDE;   //帧类型,可为：CAN_ID_STD(标准帧),CAN_ID_EXT(扩展帧)
-        unsigned char DLC;  //数据长度，可为0到8;
-        unsigned char data[8];
-} bootloader_data;
+            unsigned short int cmd     :4; //命令
+            unsigned short int addr    :12; //设备地址
+            unsigned short int  reserve :16; //保留位
+        }bit;
+    } ExtId; //扩展帧ID
+    unsigned char IDE;   //帧类型,可为：CAN_ID_STD(标准帧),CAN_ID_EXT(扩展帧)
+    unsigned char DLC;  //数据长度，可为0到8;
+    unsigned char data[8];
+}  bootloader_data;
 typedef struct _Boot_CMD_LIST
 {
-        //Bootloader相关命令
-        unsigned char Erase;        //擦出APP储存扇区数据
-        unsigned char WriteInfo;    //设置多字节写数据相关参数（写起始地址，数据量）
-        unsigned char Write;        //以多字节形式写数据
-        unsigned char Check;        //检测节点是否在线，同时返回固件信息
-        unsigned char SetBaudRate;  //设置节点波特率
-        unsigned char Excute;       //执行固件
-        //节点返回状态
-        unsigned char CmdSuccess;   //命令执行成功
-        unsigned char CmdFaild;     //命令执行失败
+    //Bootloader相关命令
+    unsigned char Erase;        //擦出APP储存扇区数据
+    unsigned char WriteInfo;    //设置多字节写数据相关参数（写起始地址，数据量）
+    unsigned char Write;        //以多字节形式写数据
+    unsigned char Check;        //检测节点是否在线，同时返回固件信息
+    unsigned char SetBaudRate;  //设置节点波特率
+    unsigned char Excute;       //执行固件
+    //节点返回状态
+    unsigned char CmdSuccess;   //命令执行成功
+    unsigned char CmdFaild;     //命令执行失败
 } Boot_CMD_LIST;
 typedef struct _SEND_INFO
 {
-        unsigned char line_num;//表示读取数据的行数,最大为2;
-        unsigned char line_cnt;//表示读取文件的函数,最大值不能大于line_num
-        unsigned char read_start_flag;//表示开始读取数据标志位
-        unsigned char send_state;//表示是否有数据需要发送
-        unsigned long int data_addr;
-        unsigned char data[68];//
-        unsigned char data_cnt;//表示需要发送多少数据,最大值为66
-        unsigned char data_len;//表示需要发送的数据长度;
+    unsigned char line_num;//表示读取数据的行数,最大为2;
+    unsigned char line_cnt;//表示读取文件的函数,最大值不能大于line_num
+    unsigned char read_start_flag;//表示开始读取数据标志位
+    unsigned char send_state;//表示是否有数据需要发送
+    unsigned long int data_addr;
+    unsigned char data[68];//
+    unsigned char data_cnt;//表示需要发送多少数据,最大值为66
+    unsigned char data_len;//表示需要发送的数据长度;
 }SEND_INFO;
 typedef struct _Device_INFO
 {
-        union
+    union
+    {
+        unsigned short int all;
+        struct
         {
-                unsigned short int all;
-                struct
-                {
-                        unsigned short int Device_addr:	12;
-                        unsigned short int reserve:	4;
-                }bits;//设备地址
-        }Device_addr;
-        unsigned long int FW_TYPE;//固件类型
-        unsigned long int FW_Version;//固件版本
+            unsigned short int Device_addr:	12;
+            unsigned short int reserve:	4;
+        }bits;//设备地址
+    }Device_addr;
+    unsigned long int FW_TYPE;//固件类型
+    unsigned long int FW_Version;//固件版本
 }Device_INFO;
 #endif // CAN_DRIVER_H
