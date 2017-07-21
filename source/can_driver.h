@@ -2,8 +2,8 @@
 #define CAN_DRIVER_H
 #define CAN_Id_Standard   0//表示标准帧
 #define CAN_Id_Extended   1//表示扩展帧
-#define CAN_ID_STD      CAN_Id_Standard
-#define CAN_ID_EXT      CAN_Id_Extended
+#define CAN_ID_STD      0
+#define CAN_ID_EXT      1
 //--以下宏定义白哦是当前设备运行的固件属性
 #define CAN_BL_BOOT     0x55555555  //运行的是Boot
 #define CAN_BL_APP      0xAAAAAAAA //运行的是APP
