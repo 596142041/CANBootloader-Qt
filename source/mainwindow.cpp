@@ -50,7 +50,7 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
     fileName=QFileDialog::getOpenFileName(this,
                                           tr("Open files"),
                                           "",
-                                          "Binary Files (*.bin);;Hex Files (*.hex);;All Files (*.*)");
+                                          "Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)");
     if(fileName.isNull()){
         return;
     }
@@ -337,29 +337,36 @@ void MainWindow::on_scanNodeAction_triggered()
             str.sprintf("0x%X",startAddr);
             QTableWidgetItem *item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,0,item);
-            if(appType == CAN_BL_BOOT){
-                     qDebug() << "appType=0x%x " << appType;
-                //   qDebug << "appType=0x%x " << appType;
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,0)->setTextAlignment(Qt::AlignHCenter);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,0)->setTextAlignment(Qt::AlignCenter);
+            if(appType == CAN_BL_BOOT)
+            {
                 str = "BOOT";
-            }else{
+            }
+            else
+            {
                 str = "APP";
-                qDebug() << "appType=0x%x " << appType;
             }
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,1,item);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignHCenter);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignCenter);
             str.sprintf("v%d.%d",(((appversion>>24)&0xFF)*10)+(appversion>>16)&0xFF,(((appversion>>8)&0xFF)*10)+appversion&0xFF);
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,2,item);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignHCenter);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignCenter);
         }
         scanNodeProcess.setValue(i);
         QCoreApplication::processEvents(QEventLoop::AllEvents);
-        if(scanNodeProcess.wasCanceled()){
-            USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
+        if(scanNodeProcess.wasCanceled())
+        {
+           // USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
             return;
         }
         startAddr++;
     }
-    USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
+   // USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
 }
 /*********************************************
  * 目前该按钮主要适用于我测试相关的功能函数
@@ -371,16 +378,21 @@ void MainWindow::on_scanNodeAction_triggered()
 void MainWindow::on_Fun_test_clicked()
 {
     on_setbaudRatePushButton_clicked();
+    int status = 0;
     //int   CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
     SEND_INFO send_data;
-    send_data.data_addr = 0x318000;
-   // send_data.data_cnt  = 16;
-    send_data.data_len = 16;
-    for(int i = 0;i <send_data.data_len;i++)
+    send_data.line_num = 2;
+    send_data.read_start_flag = 0;
+    send_data.data_cnt = 0;
+    send_data.data_addr = 0x00;
+    send_data.data_len  =0;
+    send_data.line_cnt= 0;
+    status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,10000);
+    if(status == 1)
         {
-          send_data.data[i] = i<<1;
+            qDebug()<<tr("擦除失败");
+            return ;
         }
-    CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,&send_data,100);
     qint64 test = 0xFF;
     bool ret;
     PACK_INFO pack_info;
@@ -427,6 +439,60 @@ void MainWindow::on_Fun_test_clicked()
                       default:
                           break;
                       }
+                  //---------------------------------------------------------
+                  if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
+                      {
+                          send_data.read_start_flag = 1;
+                          send_data.send_state = 0;
+                          send_data.line_num = 2;
+                          send_data.line_cnt = 0;
+                          send_data.data_cnt = 0;
+                          send_data.data_len = 0;
+                      }
+                  else
+                      {
+                          if(pack_info.data_type == DATA_BASE_ADDR||pack_info.data_type == DATA_END)//判断该行的数据是,如果是表示基地址
+                          {
+                            //  status = CAN_Send_file_data(&send_data,DEVICE_ADDR);
+                            status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,&send_data,100);
+                              if(status != 0x00)
+                              {
+                                  qDebug() << " write faile-1";
+                                  return ;
+                              }
+                              status = 0xFF;
+                              send_data.data_len = 0;
+                              send_data.data_cnt = 0;
+                              send_data.data_addr = 0x00;
+                              send_data.line_cnt = 0;
+                              for(int i = 0;i < 68;i++)
+                              {
+                                  send_data.data[0] = 0x00;
+                              }
+                          }
+                          else if(send_data.line_cnt == send_data.line_num)//到了指定的行数进行数据发送
+                          {
+                              status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,&send_data,500);
+                                if(status != 0x00)
+                                {
+                                        qDebug() << " write faile-2";
+                                    return ;
+                                }
+                              status = 0xFF;
+                              send_data.data_len = 0;
+                              send_data.data_cnt = 0;
+                              send_data.data_addr = 0x00;
+                              send_data.line_cnt = 0;
+                              for(int i = 0;i < 68;i++)
+                              {
+                                  send_data.data[0] = 0x00;
+                              }
+                          }
+                          else
+                          {
+
+                          }
+                      }
                       pack_info.data_len = bin_buf[0]<<4|bin_buf[1];
                       if(pack_info.data_type == DATA_Rrecord)//判断该行的数据是,如果是表示基地址
                       {
@@ -445,7 +511,7 @@ void MainWindow::on_Fun_test_clicked()
                         pack_info.data_base_addr =bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
                         pack_info.data_base_addr = pack_info.data_base_addr<<16;
                       }
-                      else if(pack_info.data_type == 0x00)
+                      else if(pack_info.data_type == DATA_Rrecord)
                       {
                             pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
                             for( int i = 0;i <pack_info.data_len;i++)
@@ -455,6 +521,22 @@ void MainWindow::on_Fun_test_clicked()
                             }
 
                      }
+                      if(pack_info.data_type == DATA_Rrecord)
+                          {
+                              if(send_data.line_cnt == 0)//如果计数器还为0,表示还是第一次读取,因此需要更新写入数据的地址
+                              {
+                                  send_data.data_addr = pack_info.data_addr;//将第一行的数据地址作为该数据包的写入地址
+                              }
+                              //以下是将刚才读取的数据写入send_data.data数组中
+                              for(int i = 0;i < pack_info.data_len;i++)
+                              {
+                                  send_data.data_cnt = i;
+                                  send_data.data[i+send_data.data_len] = pack_info.Data[i];
+                              }
+                              send_data.data_cnt = pack_info.data_len;
+                              send_data.data_len = send_data.data_len+send_data.data_cnt;
+                              send_data.line_cnt++;
+                          }
                     Data_clear(hex_buf,128);
                     Data_clear(bin_buf,128);
                     Data_clear_int(&pack_info.Data[0],64);
@@ -467,7 +549,9 @@ void MainWindow::on_Fun_test_clicked()
             hex_size = file.pos();
             qDebug() << "hex_size = "<<hex_size;
             ui->progressBar->setValue(hex_size);
+
         }
+     CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,CAN_BL_APP);
 }
 void MainWindow::on_setbaudRatePushButton_clicked()
 {
@@ -493,7 +577,7 @@ void MainWindow::on_setbaudRatePushButton_clicked()
     bool ConfFlag = DeviceConfig();
     if(!ConfFlag)
     {
-        USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
+       // USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
         return;
     }
     QString str = ui->newBaudRateComboBox->currentText();
@@ -513,12 +597,12 @@ void MainWindow::on_setbaudRatePushButton_clicked()
                                 100);
     if(ret != CAN_SUCCESS)
     {
-        USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
+     //   USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
         QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("设置波特率失败！"));
         return;
     }
     ui->baudRateComboBox->setCurrentIndex(ui->newBaudRateComboBox->currentIndex());
-    USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
+  //  USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
     */
     uint16_t NodeAddr;
     if(ui->allNodeCheckBox->isChecked())
@@ -615,15 +699,19 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     uint8_t cmdData[16];
     for(int i=0;i<ui->cmdListTableWidget->rowCount();i++)
     {
-         ui->cmdListTableWidget->item(i,0)->setTextAlignment(Qt::AlignHCenter);
-          ui->cmdListTableWidget->item(i,0)->setTextAlignment(Qt::AlignCenter);
-         ui->cmdListTableWidget->item(i,1)->setTextAlignment(Qt::AlignHCenter);
-          ui->cmdListTableWidget->item(i,1)->setTextAlignment(Qt::AlignCenter);
-          qDebug()<<""<<cmdStr[i]<<""<<ui->cmdListTableWidget->item(i,1)->text().toInt(NULL,16);
+        ui->cmdListTableWidget->item(i,0)->setTextAlignment(Qt::AlignHCenter);
+        ui->cmdListTableWidget->item(i,0)->setTextAlignment(Qt::AlignCenter);
+        ui->cmdListTableWidget->item(i,1)->setTextAlignment(Qt::AlignHCenter);
+        ui->cmdListTableWidget->item(i,1)->setTextAlignment(Qt::AlignCenter);
+#if 0
+        qDebug()<<""<<cmdStr[i]<<""<<ui->cmdListTableWidget->item(i,1)->text().toInt(NULL,16);
+#endif
         if(ui->cmdListTableWidget->item(i,0)->text()==cmdStr[i])
         {
             cmdData[i] = ui->cmdListTableWidget->item(i,1)->text().toInt(NULL,16);
+#if 0
             qDebug()<<""<<cmdStr[i]<<""<< cmdData[i];
+#endif
         }
     }
     CMD_List.Erase = cmdData[0];
@@ -935,6 +1023,7 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
     if(CAN_BL_erase_flag == 1)
         {
             CAN_BL_erase_flag = 0;
+            qDebug()<<tr("擦除超时")<<"TimeOut = "<<TimeOut;
              read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
         }
         else
@@ -999,9 +1088,10 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
         Bootloader_data.IDE = CAN_ID_EXT;
        // CanTxMsg TxMessage;
         VCI_CAN_OBJ can_send_msg,can_read_msg[1000];
+        can_send_msg.RemoteFlag = 0;
+        can_send_msg.SendType = 1;
         //进行crc计算,并且进行赋值
-       // crc_temp = CRCcalc16(&send_data->data[0],send_data->data_len);
-        crc_temp = CRCcalc16((char*)send_data->data ,send_data->data_len);
+        crc_temp = CRCcalc16((unsigned char*)send_data->data ,send_data->data_len);
         //对crc计算结果进行赋值;
         send_data->data[send_data->data_len] = crc_temp&0xFF;
         send_data->data[send_data->data_len+1] = (crc_temp>>8)&0xFF;
@@ -1021,16 +1111,13 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
         Bootloader_data.data[5] = ( ( send_data->data_len + 2 ) & 0xFF0000 ) >> 16;
         Bootloader_data.data[6] = ( ( send_data->data_len + 2 ) & 0xFF00 ) >> 8;
         Bootloader_data.data[7] = ( ( send_data->data_len + 2 ) & 0x00FF );
-       // can_send_msg.DLC = Bootloader_data.DLC;
         can_send_msg.DataLen = Bootloader_data.DLC;
         can_send_msg.ExternFlag = Bootloader_data.IDE;
         can_send_msg.ID = Bootloader_data.ExtId.all;
-      //  TxMessage.ExtId  = Bootloader_data.ExtId.all;
         for (i = 0; i < Bootloader_data.DLC; i++)
         {
              can_send_msg.Data[i] = Bootloader_data.data[i];
         }
-         //  CAN_WriteData(&TxMessage);
         ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
         if(ret == -1)
         {
@@ -1046,7 +1133,6 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
                       CAN_BL_write_flag = 1;
                    }
            }
-
   //--------------------------------------------
        //读取设备反馈数据
         if(CAN_BL_write_flag == 1)
@@ -1088,13 +1174,6 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
                             }
                     break;
             }
-      /*  CAN1_CanRxMsgFlag = 0;
-        if (CAN1_RxMessage.ExtId != ( ( Bootloader_data.ExtId.all & 0xFFF0 )| cmd_list.CmdSuccess ))
-        {
-
-            return 0xA0;
-        }
-        */
         //发送数据
         while(cnt < send_data->data_len+2)
         {
@@ -1105,14 +1184,8 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
                 Bootloader_data.DLC = 8;
                 Bootloader_data.ExtId.bit.cmd = cmd_list.Write;
                 //--------------------------------------------------------
-                /*
-                TxMessage.DLC = Bootloader_data.DLC;
-                TxMessage.IDE = Bootloader_data.IDE;
-                TxMessage.ExtId = Bootloader_data.ExtId.all;
-                */
-                // can_send_msg.DLC = Bootloader_data.DLC;
                  can_send_msg.DataLen = Bootloader_data.DLC;
-                 can_send_msg.ExternFlag = Bootloader_data.IDE;
+                 can_send_msg.ExternFlag = 1;
                  can_send_msg.ID = Bootloader_data.ExtId.all;
                 for (i = 0; i < Bootloader_data.DLC; i++)
                 {
@@ -1124,16 +1197,10 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
             {
                 Bootloader_data.DLC = temp;
                 Bootloader_data.ExtId.bit.cmd = cmd_list.Write;
-                //--------------------------------------------------------
-                // can_send_msg.DLC = Bootloader_data.DLC;
+                //-------------------------------------------------------
                  can_send_msg.DataLen = Bootloader_data.DLC;
                  can_send_msg.ExternFlag = Bootloader_data.IDE;
                  can_send_msg.ID = Bootloader_data.ExtId.all;
-                 /*
-                TxMessage.DLC = Bootloader_data.DLC;
-                TxMessage.IDE = Bootloader_data.IDE;
-                TxMessage.ExtId = Bootloader_data.ExtId.all;
-                */
                 for (i = 0; i < Bootloader_data.DLC; i++)
                 {
                     can_send_msg.Data[i] = send_data->data[cnt];
@@ -1152,13 +1219,6 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
             send_data->data[cnt] = 0x00;
         }
         //发送数据完成,等待响应
-        /*
-        while (CAN1_CanRxMsgFlag != 1)
-        {
-            ;
-        }
-        CAN1_CanRxMsgFlag = 0;
-        */
         //-----------------------------------
         current_time = GetTickCount();//超时判断
         while (CAN_BL_write_flag == 0)
@@ -1286,7 +1346,7 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
         hex_src++;
     }
 }
- unsigned short int MainWindow::CRCcalc16(  char *data, unsigned short int len)
+ unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short int len)
 {
     unsigned short int crc_res = 0xFFFF;
      while (len--)
