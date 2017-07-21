@@ -11,6 +11,7 @@
 #include "usb2can.h"
 #include "ControlCAN.h"
 #include "can_driver.h"
+#define DEBUG 1
 namespace Ui {
 class MainWindow;
 }
@@ -121,7 +122,7 @@ private slots:
     void  Data_clear_int( unsigned  short int *data,unsigned long int len);
     unsigned char convertion(  char *hex_data);
     void hex_to_bin(  char *hex_src,   char *bin_dst,unsigned char len);
-    unsigned short int CRCcalc16(  char *data, unsigned short int len);
+    unsigned short int CRCcalc16( unsigned char *data, unsigned short int len);
 };
 
 #endif // MAINWINDOW_H
