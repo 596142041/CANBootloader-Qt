@@ -361,12 +361,10 @@ void MainWindow::on_scanNodeAction_triggered()
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         if(scanNodeProcess.wasCanceled())
         {
-           // USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
             return;
         }
         startAddr++;
     }
-   // USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
 }
 /*********************************************
  * 目前该按钮主要适用于我测试相关的功能函数
@@ -379,7 +377,6 @@ void MainWindow::on_Fun_test_clicked()
 {
     on_setbaudRatePushButton_clicked();
     int status = 0;
-    //int   CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
     SEND_INFO send_data;
     send_data.line_num = 2;
     send_data.read_start_flag = 0;
