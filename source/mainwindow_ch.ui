@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>972</width>
-    <height>565</height>
+    <width>1059</width>
+    <height>596</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="6,5">
         <item>
          <widget class="QGroupBox" name="groupBox">
           <property name="minimumSize">
@@ -56,6 +56,14 @@
              <column>
               <property name="text">
                <string>固件版本</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>芯片型号</string>
               </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
@@ -663,7 +671,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>972</width>
+     <width>1059</width>
      <height>26</height>
     </rect>
    </property>
