@@ -6,6 +6,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
+#include <QModelIndex>
+#include <QTableWidgetItem>
 #include "scandevrangedialog.h"
 #include "usb_device.h"
 #include "usb2can.h"
@@ -108,6 +110,14 @@ private slots:
     void on_action_Close_CAN_triggered();
 
     void on_Fun_test_clicked();
+    void on_cmdListTableWidget_cellChanged(int row, int column);
+
+
+    void on_cmdListTableWidget_itemChanged(QTableWidgetItem *item);
+
+    void on_cmdListTableWidget_cellEntered(int row, int column);
+
+    void on_cmdListTableWidget_itemSelectionChanged();
 
     private:
     Ui::MainWindow *ui;
