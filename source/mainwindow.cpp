@@ -315,14 +315,6 @@ void MainWindow::on_scanNodeAction_triggered()
     {
         uint32_t appversion,appType;
         i++;
-        /*
-        ret = CAN_BL_NodeCheck(ui->deviceIndexComboBox->currentIndex(),
-                            ui->channelIndexComboBox->currentIndex(),
-                            startAddr,
-                            &appversion,
-                            &appType,
-                            10);
-                            */
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                             ui->channelIndexComboBox->currentIndex(),
                             startAddr,
@@ -339,6 +331,7 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,0,item);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,0)->setTextAlignment(Qt::AlignHCenter);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,0)->setTextAlignment(Qt::AlignCenter);
+            //--------------------------------------------------------------------------------------------------------
             if(appType == CAN_BL_BOOT)
             {
                 str = "BOOT";
@@ -351,11 +344,29 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,1,item);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignHCenter);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignCenter);
+            //-----------------------------------------------------------------------------------------------------------------
             str.sprintf("v%d.%d",(((appversion>>24)&0xFF)*10)+(appversion>>16)&0xFF,(((appversion>>8)&0xFF)*10)+appversion&0xFF);
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,2,item);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignHCenter);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignCenter);
+            //------------------------------------------------------------------------------------------------------------------
+            uint32_t chip_temp = 0x00;
+            chip_temp = appType&((uint32_t)0xFF);
+            switch (chip_temp)
+                {
+                case 0x55:
+                    str = "STM32F4";
+                    break;
+                case 0xAA:
+                     str = "TMS320F28335";
+                default:
+                    break;
+                }
+            item = new QTableWidgetItem(str);
+            ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,3,item);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,3)->setTextAlignment(Qt::AlignHCenter);
+            ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,3)->setTextAlignment(Qt::AlignCenter);
         }
         scanNodeProcess.setValue(i);
         QCoreApplication::processEvents(QEventLoop::AllEvents);
@@ -384,6 +395,7 @@ void MainWindow::on_Fun_test_clicked()
     send_data.data_len  = 0;
     send_data.line_cnt  = 0;
     send_data.line_num  = 16;
+    ui->progressBar->setValue(0);
     status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,10000);
     if(status == 1)
         {
@@ -1019,7 +1031,6 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
     if(CAN_BL_erase_flag == 1)
         {
             CAN_BL_erase_flag = 0;
-            qDebug()<<tr("擦除超时")<<"TimeOut = "<<TimeOut;
              read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
         }
         else
