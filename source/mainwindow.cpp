@@ -378,12 +378,12 @@ void MainWindow::on_Fun_test_clicked()
     on_setbaudRatePushButton_clicked();
     int status = 0;
     SEND_INFO send_data;
-    send_data.line_num = 2;
     send_data.read_start_flag = 0;
-    send_data.data_cnt = 0;
+    send_data.data_cnt  = 0;
     send_data.data_addr = 0x00;
-    send_data.data_len  =0;
-    send_data.line_cnt= 0;
+    send_data.data_len  = 0;
+    send_data.line_cnt  = 0;
+    send_data.line_num  = 16;
     status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,10000);
     if(status == 1)
         {
@@ -395,7 +395,7 @@ void MainWindow::on_Fun_test_clicked()
     PACK_INFO pack_info;
     int   hex_size = 0;
     char hex_buf[128];
-    char bin_buf[128];
+    char bin_buf[1028];
     QFile file(ui->firmwareLineEdit->text());
     qDebug() << "file name ;"<<file.fileName();
     ret = file.open(QFile::ReadOnly);//以只读的方式打开文件
@@ -441,7 +441,7 @@ void MainWindow::on_Fun_test_clicked()
                       {
                           send_data.read_start_flag = 1;
                           send_data.send_state = 0;
-                          send_data.line_num = 2;
+                          send_data.line_num = 16;
                           send_data.line_cnt = 0;
                           send_data.data_cnt = 0;
                           send_data.data_len = 0;
@@ -450,7 +450,6 @@ void MainWindow::on_Fun_test_clicked()
                       {
                           if(pack_info.data_type == DATA_BASE_ADDR||pack_info.data_type == DATA_END)//判断该行的数据是,如果是表示基地址
                           {
-                            //  status = CAN_Send_file_data(&send_data,DEVICE_ADDR);
                             status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,&send_data,100);
                               if(status != 0x00)
                               {
@@ -462,14 +461,14 @@ void MainWindow::on_Fun_test_clicked()
                               send_data.data_cnt = 0;
                               send_data.data_addr = 0x00;
                               send_data.line_cnt = 0;
-                              for(int i = 0;i < 68;i++)
+                              for(int i = 0;i < 1028;i++)
                               {
-                                  send_data.data[0] = 0x00;
+                                  send_data.data[i] = 0x00;
                               }
                           }
                           else if(send_data.line_cnt == send_data.line_num)//到了指定的行数进行数据发送
                           {
-                              status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,&send_data,500);
+                              status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,&send_data,100);
                                 if(status != 0x00)
                                 {
                                         qDebug() << " write faile-2";
@@ -480,9 +479,9 @@ void MainWindow::on_Fun_test_clicked()
                               send_data.data_cnt = 0;
                               send_data.data_addr = 0x00;
                               send_data.line_cnt = 0;
-                              for(int i = 0;i < 68;i++)
+                              for(int i = 0;i < 1028;i++)
                               {
-                                  send_data.data[0] = 0x00;
+                                  send_data.data[i] = 0x00;
                               }
                           }
                           else
@@ -535,7 +534,7 @@ void MainWindow::on_Fun_test_clicked()
                               send_data.line_cnt++;
                           }
                     Data_clear(hex_buf,128);
-                    Data_clear(bin_buf,128);
+                    Data_clear(bin_buf,1028);
                     Data_clear_int(&pack_info.Data[0],64);
                     test = file.pos();
                     qDebug() << "test = "<<test;
@@ -1068,8 +1067,8 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
 //int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int AddrOffset,unsigned char *pData,unsigned int DataNum,unsigned int TimeOut)
 int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut)
 {
-        unsigned char i;
-        unsigned char cnt = 0;
+        unsigned short int i;
+        unsigned short int  cnt = 0;
         //lpr 添加
         DWORD current_time = 0;
         DWORD new_time = 0;
@@ -1362,4 +1361,26 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
          }
      }
      return crc_res;
+}
+void MainWindow::on_cmdListTableWidget_cellChanged(int row, int column)
+{
+
+
+}
+
+void MainWindow::on_cmdListTableWidget_itemChanged(QTableWidgetItem *item)
+{
+    //  qDebug()<<" on_cmdListTableWidget_itemChanged   ";
+}
+
+void MainWindow::on_cmdListTableWidget_cellEntered(int row, int column)
+{
+        qDebug()<<" on_cmdListTableWidget_cellEntered row= "<< row<<" on_cmdListTableWidget_cellChanged column = "<< column;
+         qDebug()<<" value= "<< ui->cmdListTableWidget->item(row,column)->text().toInt(NULL,16);
+}
+
+void MainWindow::on_cmdListTableWidget_itemSelectionChanged()
+{
+     qDebug()<<" on_cmdListTableWidget_itemSelectionChanged   ";
+    // connect()
 }
