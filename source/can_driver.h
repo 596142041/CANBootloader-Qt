@@ -89,9 +89,9 @@ typedef struct _SEND_INFO
     unsigned char read_start_flag;//表示开始读取数据标志位
     unsigned char send_state;//表示是否有数据需要发送
     unsigned long int data_addr;
-    unsigned char data[68];//
-    unsigned char data_cnt;//表示需要发送多少数据,最大值为66
-    unsigned char data_len;//表示需要发送的数据长度;
+    unsigned char data[1028];//
+    unsigned short int data_cnt;//表示需要发送多少数据,最大值为66
+    unsigned short int data_len;//表示需要发送的数据长度;
 }SEND_INFO;
 typedef struct _Device_INFO
 {
