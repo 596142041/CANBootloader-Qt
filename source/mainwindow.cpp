@@ -396,7 +396,7 @@ void MainWindow::on_Fun_test_clicked()
     send_data.line_cnt  = 0;
     send_data.line_num  = 16;
     ui->progressBar->setValue(0);
-    status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,10000);
+    status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,9800);
     if(status == 1)
         {
             qDebug()<<tr("擦除失败");
@@ -1394,4 +1394,9 @@ void MainWindow::on_cmdListTableWidget_itemSelectionChanged()
 {
      qDebug()<<" on_cmdListTableWidget_itemSelectionChanged   ";
     // connect()
+}
+
+void MainWindow::on_cmdListTableWidget_clicked(const QModelIndex &index)
+{
+
 }
