@@ -132,10 +132,16 @@
               <property name="text">
                <string>名称</string>
               </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
              </column>
              <column>
               <property name="text">
                <string>值（Hex）</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
               </property>
              </column>
              <item row="0" column="0">
