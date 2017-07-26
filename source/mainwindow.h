@@ -119,6 +119,8 @@ private slots:
 
     void on_cmdListTableWidget_itemSelectionChanged();
 
+    void on_cmdListTableWidget_clicked(const QModelIndex &index);
+
     private:
     Ui::MainWindow *ui;
      Boot_CMD_LIST cmd_list;
