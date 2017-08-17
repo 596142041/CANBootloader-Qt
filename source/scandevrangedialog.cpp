@@ -6,8 +6,8 @@ ScanDevRangeDialog::ScanDevRangeDialog(QWidget *parent) :
     ui(new Ui::ScanDevRangeDialog)
 {
     ui->setupUi(this);
-    ui->spinBoxStartAddr->setValue(0x1);
-    ui->spinBoxEndAddr->setValue(0x20);
+    ui->spinBoxStartAddr->setValue(0x132);
+    ui->spinBoxEndAddr->setValue(0x134);
 }
 
 ScanDevRangeDialog::~ScanDevRangeDialog()
