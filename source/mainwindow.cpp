@@ -85,7 +85,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     int ret;
     uint32_t appversion,appType;
     uint8_t FirmwareData[1026]={0};
-    if(ui->allNodeCheckBox->isChecked())
+    if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
     {
         if(ui->nodeListTableWidget->rowCount()<=0)
         {
@@ -102,7 +102,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
          }
     }
     uint16_t NodeAddr;
-    if(ui->allNodeCheckBox->isChecked())
+    if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
     {
             /******************************************************************************************************************
              * 1，由于CAN总线是广播传输，所以在实际使用的时候是可以进行多节点同时升级的，比如可以将0地址设置为广播地址，也就是当命令地址为0的时候，
@@ -130,22 +130,22 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                     }
                 else
                     {
-
                     }
-
             }
-
     }
     else
     {
         NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
+        qDebug()<<""<<NodeAddr;
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                             ui->channelIndexComboBox->currentIndex(),
                             NodeAddr,
                             &appversion,
                             &appType,
                             500);
-        if(ret == CAN_SUCCESS){
+          qDebug()<<"ret = "<<ret;
+        if(ret == CAN_SUCCESS)
+        {
             if(appType != CAN_BL_BOOT){//当前固件不为Bootloader
                 ret = CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),
                                     ui->channelIndexComboBox->currentIndex(),
@@ -154,7 +154,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 if(ret != CAN_SUCCESS)
                    {
                         QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("执行固件程序失败！"));
-                        //USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
                         return;
                     }
 
@@ -163,7 +162,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         }
         else
         {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("节点检测失败！"));
+            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("节点检测失败-1！"));
             return;
         }
     }
@@ -172,12 +171,14 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     {
         if(!ui->allNodeCheckBox->isChecked())
         {
-            ret = CAN_BL_NodeCheck(ui->deviceIndexComboBox->currentIndex(),
+              qDebug()<<"NodeAddr = "<<NodeAddr;
+            ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                 ui->channelIndexComboBox->currentIndex(),
                                 NodeAddr,
                                 &appversion,
                                 &appType,
                                 100);
+             qDebug()<<"ret = "<<ret<<"CAN_SUCCESS = "<<CAN_SUCCESS;
             if(ret == CAN_SUCCESS)
             {
                 if(appType != CAN_BL_BOOT)
@@ -188,7 +189,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             }
             else
             {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("节点检测失败！"));
+                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("节点检测失败-2！"));
                 return;
             }
         }
@@ -226,6 +227,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                read_data_num,
                                1000);
                                */
+            ret = CAN_SUCCESS;
             if(ret != CAN_SUCCESS)
             {
                 QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("写Flash数据失败！"));
@@ -287,7 +289,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     }
     qDebug()<<time.elapsed()/1000.0<<"s";
 }
-
 void MainWindow::on_openFirmwareFileAction_triggered()
 {
     on_openFirmwareFilePushButton_clicked();
@@ -1022,7 +1023,7 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
     ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
     if(ret == -1)
     {
-     return 1;
+     return CAN_ERR_USB_WRITE_FAIL;
     }
     //QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);  //lpr 删除2017-07-13
     //-----------------------------------------
@@ -1052,7 +1053,7 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
 
     if(read_num == 0)
         {
-            return 1;
+            return CAN_BL_ERR_TIME_OUT;
         }
     else if(read_num == -1)
         {
@@ -1068,23 +1069,23 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
             }
             if(ret == 1)
             {
-//判断返回结果
+                //判断返回结果
                 if(can_read_msg[0].ID == (Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
                     {
-                        return 0;
+                        return CAN_SUCCESS;
                         qDebug()<<"成功擦除数据";
                     }
                     else
                     {
                         qDebug()<<"数据无效";
-                        return 1;
+                        return CAN_BL_ERR_CMD;
                     }
 
             }
         }
 
     VCI_ClearBuffer(4,DevIndex,CANIndex);
-    return 0;
+    return CAN_SUCCESS;
 }
 
 //int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int AddrOffset,unsigned char *pData,unsigned int DataNum,unsigned int TimeOut)
@@ -1318,7 +1319,7 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
      return 1;
     }
     VCI_ClearBuffer(4,DevIndex,CANIndex);
-    return 0;
+    return CAN_SUCCESS;
 }
 //-----------------------------------------------------------------------------------
 //以下代码均为对hex文件解码需要的代码
