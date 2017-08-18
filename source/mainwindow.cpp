@@ -197,7 +197,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            ui->channelIndexComboBox->currentIndex(),
                            NodeAddr,
                            firmwareFile.size(),
-                           1000);
+                           10000);
         if(ret != CAN_SUCCESS)
         {
             QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("擦出Flash失败！"));
@@ -924,7 +924,7 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
     ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
     if(ret == -1)
     {
-     return 1;
+     return CAN_ERR_USB_WRITE_FAIL;//USB写数据失败
     }
     /*
     QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);
@@ -957,18 +957,18 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
         read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
     if(read_num == 0)
         {
-            return 1;
+            return  CAN_BL_ERR_TIME_OUT;//超时错误
         }
     else if(read_num == -1)
         {
-            return 1;
+            return CAN_ERR_USB_READ_FAIL;//USB读数据失败
         }
     else
         {
             ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
             if(ret == -1)
             {
-                return 1;
+                 return CAN_ERR_USB_READ_FAIL;//USB读数据失败
                 VCI_ClearBuffer(4,DevIndex,CANIndex);
             }
             if(ret == 1)
@@ -979,7 +979,7 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
         }
 
     VCI_ClearBuffer(4,DevIndex,CANIndex);
-    return 0;
+    return CAN_SUCCESS;
 }
 int MainWindow::CAN_BL_init(PCBL_CMD_LIST pCmdList)
 {
@@ -991,7 +991,7 @@ int MainWindow::CAN_BL_init(PCBL_CMD_LIST pCmdList)
     cmd_list.WriteInfo  = pCmdList->WriteInfo;
     cmd_list.CmdFaild   = pCmdList->CmdFaild;
     cmd_list.CmdSuccess = pCmdList->CmdSuccess;
-    return 0;
+    return CAN_SUCCESS;
 }
 
 int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut)
@@ -1057,7 +1057,7 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
         }
     else if(read_num == -1)
         {
-            return 1;
+            return CAN_ERR_USB_READ_FAIL;
         }
     else
         {
@@ -1141,7 +1141,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
         ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
         if(ret == -1)
         {
-         return 1;
+         return CAN_ERR_USB_WRITE_FAIL;
         }
 
        current_time = GetTickCount();//超时判断
@@ -1166,16 +1166,16 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
          }
         switch (read_num) {
             case 0:
-                   return 1;
+                   return CAN_BL_ERR_TIME_OUT;
                    break;
              case -1:
-                    return 1;
+                    return CAN_ERR_USB_READ_FAIL;
                     break;
             default:
                 ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
                             if(ret == -1)
                             {
-                                return 1;
+                                return CAN_ERR_USB_READ_FAIL;
                                 VCI_ClearBuffer(4,DevIndex,CANIndex);
                             }
                             if(ret == 1)
@@ -1188,7 +1188,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
                                     else
                                     {
                                        // qDebug()<<"数据无效";
-                                        return 1;
+                                        return CAN_BL_ERR_CMD;
                                     }
 
                             }
@@ -1231,7 +1231,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
             ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
             if(ret == -1)
             {
-             return 1;
+             return CAN_BL_ERR_SEND;
             }
         }
         for (i = 0; i < send_data->data_len + 2; i++)
@@ -1262,16 +1262,16 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
           }
          switch (read_num) {
              case 0:
-                    return 1;
+                    return CAN_BL_ERR_TIME_OUT;
                     break;
               case -1:
-                     return 1;
+                     return CAN_ERR_USB_READ_FAIL;
                      break;
              default:
                  ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
                              if(ret == -1)
                              {
-                                 return 1;
+                                 return CAN_ERR_USB_READ_FAIL;
                                  VCI_ClearBuffer(4,DevIndex,CANIndex);
                              }
                              if(ret == 1)
@@ -1284,7 +1284,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
                                      else
                                      {
                                         // qDebug()<<"数据无效";
-                                         return 1;
+                                         return CAN_BL_ERR_CMD;
                                      }
 
                              }
@@ -1292,7 +1292,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
              }
         //将数据清零准备下一次数据发送工作
         cnt = 0;
-        return 0;
+        return CAN_SUCCESS;
 }
 
 int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type)
