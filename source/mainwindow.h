@@ -26,7 +26,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     int CAN_GetBaudRateNum(unsigned int BaudRate);
-    bool DeviceConfig(void);
     int USB_CAN_status  = 0;
     //定义CAN波特率参数表
     typedef struct _CAN_BAUD_RATE{
@@ -91,7 +90,7 @@ private slots:
 
     void on_scanNodeAction_triggered();
 
-    void on_setbaudRatePushButton_clicked();
+  //  void on_setbaudRatePushButton_clicked();
 
     void on_contactUsAction_triggered();
 
@@ -125,7 +124,6 @@ private slots:
     private:
     Ui::MainWindow *ui;
      Boot_CMD_LIST cmd_list;
-     unsigned char timeout_flag;
     int   CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut);
     int   CAN_BL_init(PCBL_CMD_LIST pCmdList);
     int   CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut);
