@@ -7,7 +7,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
    int ret;
     VCI_BOARD_INFO1 vci;
-    timeout_flag = 0;
     ui->setupUi(this);
     ui->cmdListTableWidget->setColumnWidth(0,180);
     ui->cmdListTableWidget->setColumnWidth(1,180);
@@ -70,12 +69,6 @@ int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
         }
     }
     return 0;
-}
-
-bool MainWindow::DeviceConfig(void)
-{
-
-    return true;
 }
 
 void MainWindow::on_updateFirmwarePushButton_clicked()
@@ -166,12 +159,16 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             return;
         }
     }
+    /***********************************************************************************************
+    *此处是准备发送数据给下位机
+    *
+    ***********************************************************************************************/
     QFile firmwareFile(ui->firmwareLineEdit->text());
     if (firmwareFile.open(QFile::ReadOnly))
     {
         if(!ui->allNodeCheckBox->isChecked())
         {
-              qDebug()<<"NodeAddr = "<<NodeAddr;
+            qDebug()<<"NodeAddr = "<<NodeAddr;
             ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                 ui->channelIndexComboBox->currentIndex(),
                                 NodeAddr,
@@ -197,7 +194,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            ui->channelIndexComboBox->currentIndex(),
                            NodeAddr,
                            firmwareFile.size(),
-                           10000);
+                           9800);
         if(ret != CAN_SUCCESS)
         {
             QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("擦出Flash失败！"));
@@ -207,12 +204,180 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         {
             Sleep(1000);
         }
-        int read_data_num;
+
         QProgressDialog writeDataProcess(QStringLiteral("正在更新固件..."),QStringLiteral("取消"),0,firmwareFile.size(),this);
         writeDataProcess.setWindowTitle(QStringLiteral("更新固件"));
         writeDataProcess.setModal(true);
         writeDataProcess.show();
         QCoreApplication::processEvents(QEventLoop::AllEvents);
+        //--------------------------------------------------------//
+        writeDataProcess.setValue(0);
+        int status = CAN_SUCCESS;
+        SEND_INFO send_data;
+        send_data.read_start_flag = 0;
+        send_data.data_cnt  = 0;
+        send_data.data_addr = 0x00;
+        send_data.data_len  = 0;
+        send_data.line_cnt  = 0;
+        send_data.line_num  = 16;
+        qint64 test = 0xFF;
+        PACK_INFO pack_info;
+        int  hex_size = 0;
+        char hex_buf[128];
+        char bin_buf[1028];
+        ret = firmwareFile.seek(0);//移动文件指针到文件头
+        if(ret == 0)
+        {
+             qDebug() << "firmwareFile.seek 失败";
+            return;
+        }
+        while(hex_size <firmwareFile.size())
+             {
+                 firmwareFile.readLine((char*)hex_buf,10);
+                 if(hex_buf[0] == ':')//表示是起始标志,判断刚才读取的数据中的第一个字节是否是起始标志
+                     {
+                       qDebug() << "hex_buf  = "<<hex_buf ;
+                       hex_to_bin(&hex_buf[1],bin_buf,8);//将读取的9个字节后面8字节由ASC_II转换为hex(16进制数据)
+                       pack_info.data_type = bin_buf[6]<<4|bin_buf[7];
+                       switch (pack_info.data_type)
+                           {
+                           case DATA_BASE_ADDR:
+                                qDebug() << " DATA_BASE_ADDR";
+                               break;
+                           case DATA_Rrecord:
+                                qDebug() << " DATA_Rrecord";
+                               break;
+                           case DATA_END:
+                                qDebug() << " DATA_END";
+                           default:
+                               break;
+                           }
+                       //---------------------------------------------------------
+                       if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
+                           {
+                               send_data.read_start_flag = 1;
+                               send_data.send_state = 0;
+                               send_data.line_num = 16;
+                               send_data.line_cnt = 0;
+                               send_data.data_cnt = 0;
+                               send_data.data_len = 0;
+                           }
+                       else
+                           {
+                               if(pack_info.data_type == DATA_BASE_ADDR||pack_info.data_type == DATA_END)//判断该行的数据是,如果是表示基地址
+                               {
+                                 status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,100);
+                                   if(status != 0x00)
+                                   {
+                                       qDebug() << " write faile-1";
+                                       return ;
+                                   }
+                                   status = 0xFF;
+                                   send_data.data_len = 0;
+                                   send_data.data_cnt = 0;
+                                   send_data.data_addr = 0x00;
+                                   send_data.line_cnt = 0;
+                                   for(int i = 0;i < 1028;i++)
+                                   {
+                                       send_data.data[i] = 0x00;
+                                   }
+                               }
+                               else if(send_data.line_cnt == send_data.line_num)//到了指定的行数进行数据发送
+                               {
+                                   status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,100);
+                                     if(status != 0x00)
+                                     {
+                                             qDebug() << " write faile-2";
+                                         return ;
+                                     }
+                                   status = 0xFF;
+                                   send_data.data_len = 0;
+                                   send_data.data_cnt = 0;
+                                   send_data.data_addr = 0x00;
+                                   send_data.line_cnt = 0;
+                                   for(int i = 0;i < 1028;i++)
+                                   {
+                                       send_data.data[i] = 0x00;
+                                   }
+                               }
+                               else
+                               {
+
+                               }
+                           }
+                           pack_info.data_len = bin_buf[0]<<4|bin_buf[1];
+                           if(pack_info.data_type == DATA_Rrecord)//判断该行的数据是,如果是表示基地址
+                           {
+                               pack_info.data_addr_offset = bin_buf[2]<<12|bin_buf[3]<<8|bin_buf[4]<<4|bin_buf[5];
+                           }
+                           else
+                           {
+                               pack_info.data_addr_offset = 0x0000;
+                           }
+                           Data_clear(hex_buf,128);
+                           firmwareFile.readLine((char*)hex_buf,(pack_info.data_len*2+3+1));
+                           qDebug() << "hex_buf is = "<<hex_buf;
+                           hex_to_bin(&hex_buf[0],bin_buf,pack_info.data_len*2);//将读取的数据转换为hex;
+                           if(pack_info.data_type == DATA_BASE_ADDR)
+                           {
+                             pack_info.data_base_addr =bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
+                             pack_info.data_base_addr = pack_info.data_base_addr<<16;
+                           }
+                           else if(pack_info.data_type == DATA_Rrecord)
+                           {
+                                 pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
+                                 for( int i = 0;i <pack_info.data_len;i++)
+                                 {
+                                    pack_info.Data[i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
+                                     qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
+                                 }
+
+                          }
+                           if(pack_info.data_type == DATA_Rrecord)
+                               {
+                                   if(send_data.line_cnt == 0)//如果计数器还为0,表示还是第一次读取,因此需要更新写入数据的地址
+                                   {
+                                       send_data.data_addr = pack_info.data_addr;//将第一行的数据地址作为该数据包的写入地址
+                                   }
+                                   //以下是将刚才读取的数据写入send_data.data数组中
+                                   for(int i = 0;i < pack_info.data_len;i++)
+                                   {
+                                       send_data.data_cnt = i;
+                                       send_data.data[i+send_data.data_len] = pack_info.Data[i];
+                                   }
+                                   send_data.data_cnt = pack_info.data_len;
+                                   send_data.data_len = send_data.data_len+send_data.data_cnt;
+                                   send_data.line_cnt++;
+                               }
+                         Data_clear(hex_buf,128);
+                         Data_clear(bin_buf,1028);
+                         Data_clear_int(&pack_info.Data[0],64);
+                         test = firmwareFile.pos();
+                         qDebug() << "test = "<<test;
+                         firmwareFile.seek(firmwareFile.pos()+1);
+                         test = firmwareFile.pos();
+                         qDebug() << "test = "<<test;
+                     }
+                 hex_size = firmwareFile.pos();
+                 qDebug() << "hex_size = "<<hex_size;
+                 //ui->progressBar->setValue(hex_size);
+                 writeDataProcess.setValue(hex_size);
+                 QCoreApplication::processEvents(QEventLoop::AllEvents);
+                 if(writeDataProcess.wasCanceled())
+                 {
+                     return;
+                 }
+                 if(ui->allNodeCheckBox->isChecked()){
+                     Sleep(10);
+                 }
+
+             }
+         // CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
+        //----------------------------------------------------------//
+
+#if 0
+
+          int read_data_num = 0;
         int i=0;
         int PackSize = 512;
         for(i=0;i<firmwareFile.size();i+=PackSize)
@@ -243,6 +408,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 Sleep(10);
             }
         }
+#endif
         writeDataProcess.setValue(firmwareFile.size());
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         if(writeDataProcess.wasCanceled())
@@ -266,7 +432,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
 
     }
     Sleep(50);
-    if(!ui->allNodeCheckBox->isChecked()){
+    if(!ui->allNodeCheckBox->isChecked())
+    {
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                             ui->channelIndexComboBox->currentIndex(),
                             NodeAddr,
@@ -399,7 +566,7 @@ void MainWindow::on_scanNodeAction_triggered()
 */
 void MainWindow::on_Fun_test_clicked()
 {
-    on_setbaudRatePushButton_clicked();
+  //  on_setbaudRatePushButton_clicked();
     int status = 0;
     SEND_INFO send_data;
     send_data.read_start_flag = 0;
@@ -574,94 +741,6 @@ void MainWindow::on_Fun_test_clicked()
         }
      CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,CAN_BL_APP);
 }
-void MainWindow::on_setbaudRatePushButton_clicked()
-{
-        #if 0
-    if(ui->allNodeCheckBox->isChecked())
-    {
-        if(ui->nodeListTableWidget->rowCount()<=0)
-        {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无任何节点！"));
-            return;
-        }
-    }
-    else
-    {
-        if(ui->nodeListTableWidget->currentIndex().row()<0)
-        {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("请选择节点！"));
-            return;
-        }
-    }
-    /*
-     *    CAN_INIT_CONFIG CAN_InitConfig;
-    bool ConfFlag = DeviceConfig();
-    if(!ConfFlag)
-    {
-       // USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
-        return;
-    }
-    QString str = ui->newBaudRateComboBox->currentText();
-    str.resize(str.length()-4);
-    int baud = str.toInt(NULL,10)*1000;
-    CAN_InitConfig.CAN_BRP = CANBaudRateTab[CAN_GetBaudRateNum(baud)].PreScale;
-    CAN_InitConfig.CAN_SJW = CANBaudRateTab[CAN_GetBaudRateNum(baud)].SJW;
-    CAN_InitConfig.CAN_BS1 = CANBaudRateTab[CAN_GetBaudRateNum(baud)].BS1;
-    CAN_InitConfig.CAN_BS2 = CANBaudRateTab[CAN_GetBaudRateNum(baud)].BS2;
-
-
-    ret = CAN_BL_SetNewBaudRate(ui->deviceIndexComboBox->currentIndex(),
-                                ui->channelIndexComboBox->currentIndex(),
-                                NodeAddr,
-                                &CAN_InitConfig,
-                                baud,
-                                100);
-    if(ret != CAN_SUCCESS)
-    {
-     //   USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
-        QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("设置波特率失败！"));
-        return;
-    }
-    ui->baudRateComboBox->setCurrentIndex(ui->newBaudRateComboBox->currentIndex());
-  //  USB_CloseDevice(ui->deviceIndexComboBox->currentIndex());
-    */
-    uint16_t NodeAddr;
-    if(ui->allNodeCheckBox->isChecked())
-    {
-        NodeAddr = 0x00;
-    }
-    else
-    {
-        NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
-    }
-   #if 1
-     int ret;
-   ret  = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,0x120,50);
-    if(ret == 1)
-        {
-              qDebug() << "数据擦除成功";
-        }
-    else
-        {
-            qDebug() << "失败";
-        }
-       #endif
-
-     int ret;
-    if(ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),1)->text() == "APP")
-        {
-            qDebug() << "CAN_BL_BOOT";
-            CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_BOOT);
-        }
-        else
-        {
-             qDebug() << "CAN_BL_APP";
-             CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
-        }
-
-#endif
-}
-
 void MainWindow::on_contactUsAction_triggered()
 {
     QString AboutStr;
@@ -926,18 +1005,6 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
     {
      return CAN_ERR_USB_WRITE_FAIL;//USB写数据失败
     }
-    /*
-    QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);
-    if(timeout_flag == 1)
-        {
-            timeout_flag = 0;
-             read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
-        }
-     else
-        {
-            read_num = 0;
-        }
-*/
     //QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);  //lpr 删除2017-07-13
         //-----------------------------------------
         //lpr 添加
