@@ -5,8 +5,14 @@
 #define CAN_ID_STD      0
 #define CAN_ID_EXT      1
 //--以下宏定义白哦是当前设备运行的固件属性
-#define CAN_BL_BOOT     0x55555555  //运行的是Boot
-#define CAN_BL_APP      0xAAAAAAAA //运行的是APP
+#define CAN_BL_BOOT     0x555555
+#define CAN_BL_APP      0xAAAAAA
+
+//----------------------以下宏定义是对芯片型号进行宏定义----------------------------
+#define TMS320F28335      1
+#define TMS320F2808       2
+#define STM32F407IGT6     3
+//---------------------------------------------------
 //--------------------
 //对hex文件解码使用的数据结构
 #define NUM_OFFSET   48
@@ -42,6 +48,17 @@
 //------------------------------------------------
 #define  FW_TYPE_APP  0xAAAAAAAA
 #define  FW_TYPE_BOOT 0x55555555
+//6.函数返回错误代码定义
+#define CAN_SUCCESS                     (0)   //函数执行成功
+#define CAN_ERR_NOT_SUPPORT             (-1)  //适配器不支持该函数
+#define CAN_ERR_USB_WRITE_FAIL          (-2)  //USB写数据失败
+#define CAN_ERR_USB_READ_FAIL           (-3)  //USB读数据失败
+#define CAN_ERR_CMD_FAIL                (-4)  //命令执行失败
+#define	CAN_BL_ERR_CONFIG		(-20) //配置设备错误
+#define	CAN_BL_ERR_SEND			(-21) //发送数据出错
+#define	CAN_BL_ERR_TIME_OUT		(-22) //超时错误
+#define	CAN_BL_ERR_CMD			(-23) //执行命令失败
+
 typedef struct _PACK_INFO
 {
     unsigned short int data_len;
@@ -95,16 +112,24 @@ typedef struct _SEND_INFO
 }SEND_INFO;
 typedef struct _Device_INFO
 {
-    union
-    {
-        unsigned short int all;
-        struct
+        union
         {
-            unsigned short int Device_addr:	12;
-            unsigned short int reserve:	4;
-        }bits;//设备地址
-    }Device_addr;
-    unsigned long int FW_TYPE;//固件类型
-    unsigned long int FW_Version;//固件版本
+                unsigned short int all;
+                struct
+                {
+                        unsigned short int Device_addr:	12;
+                        unsigned short int reserve:	4;
+                }bits;//设备地址
+        }Device_addr;
+        union
+        {
+                unsigned  int all;
+                struct
+                {
+                        unsigned  int Chip_Value:8;//固件类型
+                        unsigned  int FW_TYPE:24;//控制器芯片类型
+                }bits;
+        }FW_TYPE;
+        unsigned   int FW_Version;//固件版本
 }Device_INFO;
 #endif // CAN_DRIVER_H
