@@ -548,32 +548,42 @@
                  </property>
                  <item>
                   <property name="text">
-                   <string>1000 Kbps</string>
+                   <string>1000Kbps</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>500 Kbps</string>
+                   <string>800Kbps</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>200 Kbps</string>
+                   <string>500Kbps</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>100 Kbps</string>
+                   <string>400Kbps</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>50 Kbps</string>
+                   <string>250Kbps</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>20 Kbps</string>
+                   <string>200Kbps</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>125Kbps</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>100Kbps</string>
                   </property>
                  </item>
                 </widget>
