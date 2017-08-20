@@ -44,11 +44,9 @@ MainWindow::~MainWindow()
 void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
     QString fileName;
-    fileName=QFileDialog::getOpenFileName(this,
-                                          tr("Open files"),
-                                          "",
-                                          "Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)");
-    if(fileName.isNull()){
+    fileName=QFileDialog::getOpenFileName(this,tr("Open files"),"","Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)");
+    if(fileName.isNull())
+    {
         return;
     }
     ui->firmwareLineEdit->setText(fileName);
@@ -97,12 +95,12 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     uint16_t NodeAddr;
     if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
     {
-            /******************************************************************************************************************
-             * 1，由于CAN总线是广播传输，所以在实际使用的时候是可以进行多节点同时升级的，比如可以将0地址设置为广播地址，也就是当命令地址为0的时候，
-             * 每个节点收到命令之后都应该执行该命令，但是由于同一时刻，CAN总线上不能传输多个节点的数据，所以这些从节点再执行0地址命令的时候可以不
-             * 用返回状态，所以这样做在实际使用的时候，若某个节点的某个命令执行出了问题，主节点缺无法立即知道，因此就需要额外的方式来判断升级是否
-             * 成功，比如可以通过升级完毕之后，通过获取每个节点的固件信息来判断。
-             *****************************************************************************************************************/
+        /******************************************************************************************************************
+         * 1，由于CAN总线是广播传输，所以在实际使用的时候是可以进行多节点同时升级的，比如可以将0地址设置为广播地址，也就是当命令地址为0的时候，
+         * 每个节点收到命令之后都应该执行该命令，但是由于同一时刻，CAN总线上不能传输多个节点的数据，所以这些从节点再执行0地址命令的时候可以不
+         * 用返回状态，所以这样做在实际使用的时候，若某个节点的某个命令执行出了问题，主节点缺无法立即知道，因此就需要额外的方式来判断升级是否
+         * 成功，比如可以通过升级完毕之后，通过获取每个节点的固件信息来判断。
+         *****************************************************************************************************************/
         int row_count = 0;
         row_count = ui->nodeListTableWidget->rowCount();
         for(int i = 0; i <row_count;i++)
@@ -134,7 +132,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             NodeAddr,
                             &DEVICE_INFO.FW_Version,
                             &DEVICE_INFO.FW_TYPE.all,
-                            10);
+                            60);
         if(ret == CAN_SUCCESS)
         {
             if(DEVICE_INFO.FW_TYPE.bits.FW_TYPE != CAN_BL_BOOT){//当前固件不为Bootloader
