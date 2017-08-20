@@ -88,20 +88,6 @@ typedef  struct  _CBL_CMD_LIST{
 	unsigned char	CmdFaild;		//命令执行失败
 } CBL_CMD_LIST,*PCBL_CMD_LIST; 
 
-//6.函数返回错误代码定义
-#define CAN_SUCCESS             (0)   //函数执行成功
-#define CAN_ERR_NOT_SUPPORT     (-1)  //适配器不支持该函数
-#define CAN_ERR_USB_WRITE_FAIL  (-2)  //USB写数据失败
-#define CAN_ERR_USB_READ_FAIL   (-3)  //USB读数据失败
-#define CAN_ERR_CMD_FAIL        (-4)  //命令执行失败
-#define	CAN_BL_ERR_CONFIG		(-20) //配置设备错误
-#define	CAN_BL_ERR_SEND			(-21) //发送数据出错
-#define	CAN_BL_ERR_TIME_OUT		(-22) //超时错误
-#define	CAN_BL_ERR_CMD			(-23) //执行命令失败
-
-//7.CAN Bootloader固件类型
-#define CAN_BL_BOOT     0x55555555
-#define CAN_BL_APP      0xAAAAAAAA
 
 #ifdef __cplusplus
 extern "C"
