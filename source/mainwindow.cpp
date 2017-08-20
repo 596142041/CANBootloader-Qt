@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->updateFirmwarePushButton->setEnabled(false);
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
-    ui->baudRateComboBox->setCurrentIndex(1);
+    ui->baudRateComboBox->setCurrentIndex(2);
 }
 
 MainWindow::~MainWindow()
@@ -58,12 +58,15 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
 
 int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
 {
-    for(int i=0;i<27;i++){
-        if(BaudRate == CANBaudRateTab[i].BaudRate)
+
+    for(int i=0;i<27;i++)
+    {
+        if(BaudRate == CANBus_Baudrate_table[i].BaudRate)
         {
             return i;
         }
     }
+
     return 0;
 }
 
@@ -165,12 +168,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             #if DEBUG
               qDebug()<<"NodeAddr = "<<NodeAddr;
             #endif
-            ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
-                                ui->channelIndexComboBox->currentIndex(),
-                                NodeAddr,
-                                &DEVICE_INFO.FW_Version,
-                                &DEVICE_INFO.FW_TYPE.all,
-                                100);
+            ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,
+                                &DEVICE_INFO.FW_Version,&DEVICE_INFO.FW_TYPE.all,100);
             #if DEBUG
              qDebug()<<"ret = "<<ret<<"CAN_SUCCESS = "<<CAN_SUCCESS;
             #endif
@@ -891,8 +890,16 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     VCI_init.Filter = 1;
     VCI_init.Mode = 0;
     VCI_init.Reserved = 0x00;
+    //---------波特率处理
+    QString str = ui->baudRateComboBox->currentText();
+    str.resize(str.length()-4);
+    int baud = str.toInt(NULL,10)*1000;
+    VCI_init.Timing0  =  CANBus_Baudrate_table[CAN_GetBaudRateNum(baud)].Timing0;//波特率的配置
+    VCI_init.Timing1  =  CANBus_Baudrate_table[CAN_GetBaudRateNum(baud)].Timing1;//波特率的配置
+    /*
     VCI_init.Timing0  = CANBus_Baudrate_table[baud_indx].Timing0;//波特率的配置
     VCI_init.Timing1  = CANBus_Baudrate_table[baud_indx].Timing1;//波特率的配置
+    */
     if(ui->channelIndexComboBox->currentIndex() == 0||(ui->channelIndexComboBox->currentIndex() == 1))
         {
             ret = VCI_InitCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),&VCI_init);
@@ -1039,35 +1046,6 @@ void MainWindow::on_action_Close_CAN_triggered()
 {
     on_Close_CAN_clicked();
 }
-//-------------------------------------------------------------------------
-void MainWindow::on_cmdListTableWidget_cellChanged(int row, int column)
-{
-
-
-}
-
-void MainWindow::on_cmdListTableWidget_itemChanged(QTableWidgetItem *item)
-{
-   //  qDebug()<<" on_cmdListTableWidget_itemChanged   ";
-}
-
-void MainWindow::on_cmdListTableWidget_cellEntered(int row, int column)
-{
-       qDebug()<<" on_cmdListTableWidget_cellEntered row= "<< row<<" on_cmdListTableWidget_cellChanged column = "<< column;
-        qDebug()<<" value= "<< ui->cmdListTableWidget->item(row,column)->text().toInt(NULL,16);
-}
-
-void MainWindow::on_cmdListTableWidget_itemSelectionChanged()
-{
-    qDebug()<<" on_cmdListTableWidget_itemSelectionChanged   ";
-   // connect()
-}
-
-void MainWindow::on_cmdListTableWidget_clicked(const QModelIndex &index)
-{
-
-}
-
 //------------------------------------------------------------------------
 //以下函数是根据自己的CAN设备进行编写
 int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut)
