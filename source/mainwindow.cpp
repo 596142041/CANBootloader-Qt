@@ -54,9 +54,6 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
         return;
     }
     ui->firmwareLineEdit->setText(fileName);
-    //int count = 0;
-    // count = ui->nodeListTableWidget->columnCount();
-    //ui->nodeListTableWidget->rowCount()
     qDebug()<<"uui->nodeListTableWidget->rowCount() = "<<ui->nodeListTableWidget->rowCount();
      qDebug()<<"ui->nodeListTableWidget->columnCount() = "<<ui->nodeListTableWidget->currentColumn();
 }
@@ -136,7 +133,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             &appversion,
                             &appType,
                             500);
-          qDebug()<<"ret = "<<ret;
         if(ret == CAN_SUCCESS)
         {
             if(appType != CAN_BL_BOOT){//当前固件不为Bootloader
@@ -161,7 +157,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     }
     /***********************************************************************************************
     *此处是准备发送数据给下位机
-    *
     ***********************************************************************************************/
     QFile firmwareFile(ui->firmwareLineEdit->text());
     if (firmwareFile.open(QFile::ReadOnly))
@@ -360,7 +355,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                      }
                  hex_size = firmwareFile.pos();
                  qDebug() << "hex_size = "<<hex_size;
-                 //ui->progressBar->setValue(hex_size);
                  writeDataProcess.setValue(hex_size);
                  QCoreApplication::processEvents(QEventLoop::AllEvents);
                  if(writeDataProcess.wasCanceled())
@@ -372,7 +366,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                  }
 
              }
-         // CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
         //----------------------------------------------------------//
 
 #if 0
@@ -566,7 +559,6 @@ void MainWindow::on_scanNodeAction_triggered()
 */
 void MainWindow::on_Fun_test_clicked()
 {
-  //  on_setbaudRatePushButton_clicked();
     int status = 0;
     SEND_INFO send_data;
     send_data.read_start_flag = 0;
@@ -983,6 +975,35 @@ void MainWindow::on_action_Close_CAN_triggered()
 {
     on_Close_CAN_clicked();
 }
+//-------------------------------------------------------------------------
+void MainWindow::on_cmdListTableWidget_cellChanged(int row, int column)
+{
+
+
+}
+
+void MainWindow::on_cmdListTableWidget_itemChanged(QTableWidgetItem *item)
+{
+   //  qDebug()<<" on_cmdListTableWidget_itemChanged   ";
+}
+
+void MainWindow::on_cmdListTableWidget_cellEntered(int row, int column)
+{
+       qDebug()<<" on_cmdListTableWidget_cellEntered row= "<< row<<" on_cmdListTableWidget_cellChanged column = "<< column;
+        qDebug()<<" value= "<< ui->cmdListTableWidget->item(row,column)->text().toInt(NULL,16);
+}
+
+void MainWindow::on_cmdListTableWidget_itemSelectionChanged()
+{
+    qDebug()<<" on_cmdListTableWidget_itemSelectionChanged   ";
+   // connect()
+}
+
+void MainWindow::on_cmdListTableWidget_clicked(const QModelIndex &index)
+{
+
+}
+
 //------------------------------------------------------------------------
 //以下函数是根据自己的CAN设备进行编写
 int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut)
@@ -1453,32 +1474,4 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
      }
      return crc_res;
 }
-void MainWindow::on_cmdListTableWidget_cellChanged(int row, int column)
-{
-
-
-}
-
-void MainWindow::on_cmdListTableWidget_itemChanged(QTableWidgetItem *item)
-{
-    //  qDebug()<<" on_cmdListTableWidget_itemChanged   ";
-}
-
-void MainWindow::on_cmdListTableWidget_cellEntered(int row, int column)
-{
-        qDebug()<<" on_cmdListTableWidget_cellEntered row= "<< row<<" on_cmdListTableWidget_cellChanged column = "<< column;
-         qDebug()<<" value= "<< ui->cmdListTableWidget->item(row,column)->text().toInt(NULL,16);
-}
-
-void MainWindow::on_cmdListTableWidget_itemSelectionChanged()
-{
-     qDebug()<<" on_cmdListTableWidget_itemSelectionChanged   ";
-    // connect()
-}
-
-void MainWindow::on_cmdListTableWidget_clicked(const QModelIndex &index)
-{
-
-}
-
 
