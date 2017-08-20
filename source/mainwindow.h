@@ -27,6 +27,7 @@ public:
     ~MainWindow();
     int CAN_GetBaudRateNum(unsigned int BaudRate);
     int USB_CAN_status  = 0;
+#if 0
     //定义CAN波特率参数表
     typedef struct _CAN_BAUD_RATE{
       unsigned char   SJW;
@@ -66,19 +67,23 @@ public:
     {1,13,2,625,10000},    // 10K
     {1,16,3,1000,5000},    // 5K
     };
+#endif
     typedef struct
         {
-            // VCI_init.Timing0 = 0x00;//波特率的配置
-           // VCI_init.Timing1  = 0x1C;//波特率的配置
-             unsigned char Timing0;
-             unsigned char Timing1;
+         unsigned char Timing0;
+         unsigned char Timing1;
+         unsigned int  BaudRate;
         }CANBus_Baudrate;
-CANBus_Baudrate CANBus_Baudrate_table[4]=
+CANBus_Baudrate CANBus_Baudrate_table[27]=
 {
-    {0x00,0x14},//1000Kbps
-    {0x00,0x1C},//500Kbps
-    {0x1,0x2F},//200Kbps
-    {0x03,0x2F},//100Kbps
+    {0x00, 0x14, 1000000},//1000Kbps
+    {0x00, 0x16, 800000}, //800Kbps
+    {0x00, 0x1C, 500000}, //500Kbps
+    {0x00, 0x2F, 400000}, //400Kbps
+    {0x01, 0x1C, 250000}, //250Kbps
+    {0x01, 0x2F, 200000}, //200Kbps
+    {0x03, 0x1C, 125000}, //125Kbps
+    {0x03, 0x2F, 100000}, //100Kbps
 };
 
 private slots:
@@ -89,8 +94,6 @@ private slots:
     void on_openFirmwareFileAction_triggered();
 
     void on_scanNodeAction_triggered();
-
-  //  void on_setbaudRatePushButton_clicked();
 
     void on_contactUsAction_triggered();
 
@@ -109,18 +112,6 @@ private slots:
     void on_action_Close_CAN_triggered();
 
     void on_Fun_test_clicked();
-    void on_cmdListTableWidget_cellChanged(int row, int column);
-
-
-    void on_cmdListTableWidget_itemChanged(QTableWidgetItem *item);
-
-    void on_cmdListTableWidget_cellEntered(int row, int column);
-
-    void on_cmdListTableWidget_itemSelectionChanged();
-
-    void on_cmdListTableWidget_clicked(const QModelIndex &index);
-
-
     private:
     Ui::MainWindow *ui;
      Boot_CMD_LIST cmd_list;
