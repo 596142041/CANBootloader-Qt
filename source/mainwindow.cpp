@@ -95,7 +95,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             return;
          }
     }
-    uint16_t NodeAddr;
+    uint16_t NodeAddr  = (uint16_t)0x00;
     if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
     {
         /******************************************************************************************************************
@@ -135,7 +135,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             NodeAddr,
                             &DEVICE_INFO.FW_Version,
                             &DEVICE_INFO.FW_TYPE.all,
-                            60);
+                            100);
         if(ret == CAN_SUCCESS)
         {
             if(DEVICE_INFO.FW_TYPE.bits.FW_TYPE != CAN_BL_BOOT){//当前固件不为Bootloader
@@ -187,13 +187,28 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 return;
             }
         }
+        unsigned int erase_timeout_temp;
+        erase_timeout_temp = firmwareFile.size()/0x10000;
+        if(firmwareFile.size()%0x10000 != 0)
+            {
+               erase_timeout_temp = erase_timeout_temp+1;
+            }
+            else
+            {
+                erase_timeout_temp = erase_timeout_temp;
+            }
+        erase_timeout_temp = erase_timeout_temp*2000;
+#if DEBUG
+        qDebug()<<"erase_timeout_temp = "<<erase_timeout_temp;
+#endif
         ret = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),
                            ui->channelIndexComboBox->currentIndex(),
                            NodeAddr,
                            firmwareFile.size(),
-                           9800);
+                           erase_timeout_temp);
         if(ret != CAN_SUCCESS)
         {
+                qDebug()<<"ret = "<<ret;
             QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("擦出Flash失败！"));
             return;
         }
@@ -343,7 +358,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                      qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
                                     #endif
                                  }
-
                           }
                            if(pack_info.data_type == DATA_Rrecord)
                                {
@@ -389,7 +403,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                  }
              }
         //----------------------------------------------------------//
-
 #if 0
   uint8_t FirmwareData[1026]={0};
           int read_data_num = 0;
@@ -437,24 +450,16 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         return;
     }
     //执行固件
-    ret = CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),
-                        ui->channelIndexComboBox->currentIndex(),
-                        NodeAddr,
-                        CAN_BL_APP);
+    ret = CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
     if(ret != CAN_SUCCESS)
     {
         QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("执行固件程序失败！"));
-
     }
     Sleep(50);
     if(!ui->allNodeCheckBox->isChecked())
     {
-         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
-                                ui->channelIndexComboBox->currentIndex(),
-                                NodeAddr,
-                                &DEVICE_INFO.FW_Version,
-                                &DEVICE_INFO.FW_TYPE.all,
-                                100);
+         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(), ui->channelIndexComboBox->currentIndex(),
+                                NodeAddr, &DEVICE_INFO.FW_Version, &DEVICE_INFO.FW_TYPE.all,100);
         if(ret == CAN_SUCCESS)
         {
             QString str;
@@ -466,7 +471,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 str = "APP";
             }
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),1)->setText(str);
-            str.sprintf("v%d.%d",(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)+(DEVICE_INFO.FW_Version>>16)&0xFF,(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)+DEVICE_INFO.FW_Version&0xFF);
+            str.sprintf("v%d.%d",(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)|((DEVICE_INFO.FW_Version>>16)&0xFF),(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)|(DEVICE_INFO.FW_Version&0xFF));
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),2)->setText(str);
             //--------------------添加烧写时间长度
             str.sprintf("%2.3f s",time.elapsed()/1000.0);
@@ -552,7 +557,7 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignHCenter);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignCenter);
             //-----------------------------------------------------------------------------------------------------------------
-            str.sprintf("v%d.%d",(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)+(DEVICE_INFO.FW_Version>>16)&0xFF,(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)+DEVICE_INFO.FW_Version&0xFF);
+            str.sprintf("v%d.%d",(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)|((DEVICE_INFO.FW_Version>>16)&0xFF),(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)|(DEVICE_INFO.FW_Version&0xFF));
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,2,item);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignHCenter);
@@ -882,8 +887,6 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     CMD_List.CmdSuccess = cmdData[6];
     CMD_List.CmdFaild = cmdData[5];
     CAN_BL_init(&CMD_List);//初始化cmd
-    int baud_indx;
-    baud_indx = ui->baudRateComboBox->currentIndex();
     VCI_INIT_CONFIG VCI_init;
     VCI_init.AccCode = 0x00000000;
     VCI_init.AccMask = 0xFFFFFFFF;
@@ -1200,7 +1203,7 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
             if(ret == 1)
             {
                 //判断返回结果
-                if(can_read_msg[0].ID == (Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                if(can_read_msg[0].ID == (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
                     {
                         return CAN_SUCCESS;
                         qDebug()<<"成功擦除数据";
@@ -1404,7 +1407,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
                              }
                              if(ret == 1)
                              {
-                                 if(can_read_msg[0].ID != (Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                                 if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
                                      {
                                          return CAN_BL_ERR_CMD;
                                      }
