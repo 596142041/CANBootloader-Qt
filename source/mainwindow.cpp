@@ -130,12 +130,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         #if DEBUG
          qDebug()<<""<<NodeAddr;
         #endif
-        ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
-                            ui->channelIndexComboBox->currentIndex(),
-                            NodeAddr,
-                            &DEVICE_INFO.FW_Version,
-                            &DEVICE_INFO.FW_TYPE.all,
-                            100);
+        ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(), ui->channelIndexComboBox->currentIndex(), NodeAddr,
+                            &DEVICE_INFO.FW_Version,&DEVICE_INFO.FW_TYPE.all,100);
         if(ret == CAN_SUCCESS)
         {
             if(DEVICE_INFO.FW_TYPE.bits.FW_TYPE != CAN_BL_BOOT){//当前固件不为Bootloader
@@ -196,6 +192,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             else
             {
                 erase_timeout_temp = erase_timeout_temp;
+            }
+        if(erase_timeout_temp >5||erase_timeout_temp == 5)
+            {
+                erase_timeout_temp = 5;
             }
         erase_timeout_temp = erase_timeout_temp*2000;
 #if DEBUG
@@ -899,10 +899,6 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     int baud = str.toInt(NULL,10)*1000;
     VCI_init.Timing0  =  CANBus_Baudrate_table[CAN_GetBaudRateNum(baud)].Timing0;//波特率的配置
     VCI_init.Timing1  =  CANBus_Baudrate_table[CAN_GetBaudRateNum(baud)].Timing1;//波特率的配置
-    /*
-    VCI_init.Timing0  = CANBus_Baudrate_table[baud_indx].Timing0;//波特率的配置
-    VCI_init.Timing1  = CANBus_Baudrate_table[baud_indx].Timing1;//波特率的配置
-    */
     if(ui->channelIndexComboBox->currentIndex() == 0||(ui->channelIndexComboBox->currentIndex() == 1))
         {
             ret = VCI_InitCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),&VCI_init);
