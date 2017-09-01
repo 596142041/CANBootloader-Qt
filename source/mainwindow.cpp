@@ -403,40 +403,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                  }
              }
         //----------------------------------------------------------//
-#if 0
-  uint8_t FirmwareData[1026]={0};
-          int read_data_num = 0;
-        int i=0;
-        int PackSize = 512;
-        for(i=0;i<firmwareFile.size();i+=PackSize)
-        {
-            read_data_num = firmwareFile.read((char*)FirmwareData,PackSize);
-            /*
-            ret = CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),
-                               ui->channelIndexComboBox->currentIndex(),
-                               NodeAddr,
-                               i,
-                               FirmwareData,
-                               read_data_num,
-                               1000);
-                               */
-            ret = CAN_SUCCESS;
-            if(ret != CAN_SUCCESS)
-            {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("写Flash数据失败！"));
-                return;
-            }
-            writeDataProcess.setValue(i);
-            QCoreApplication::processEvents(QEventLoop::AllEvents);
-            if(writeDataProcess.wasCanceled())
-            {
-                return;
-            }
-            if(ui->allNodeCheckBox->isChecked()){
-                Sleep(10);
-            }
-        }
-#endif
         writeDataProcess.setValue(firmwareFile.size());
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         if(writeDataProcess.wasCanceled())
