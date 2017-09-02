@@ -893,51 +893,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
              USB_CAN_status = 0x04;
              VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
         }
-    else if (ui->channelIndexComboBox->currentIndex() == 2)
-        {
-            ret = VCI_InitCAN(4,ui->deviceIndexComboBox->currentIndex(),0,&VCI_init);
-            if(ret!=1)
-            {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("配置设备失败！"));
-                USB_CAN_status = 3;
-                return;
-            }
-            ret = VCI_StartCAN(4,ui->deviceIndexComboBox->currentIndex(),0);
-            if(ret!=1)
-            {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("配置设备失败 USB_CAN_status =4！"));
-               USB_CAN_status = 3;
-                return;
-            }
-            ret = VCI_InitCAN(4,ui->deviceIndexComboBox->currentIndex(),1,&VCI_init);
-            if(ret!=1)
-            {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("配置设备失败！"));
-                USB_CAN_status = 3;
-                return;
-            }
-            ret = VCI_StartCAN(4,ui->deviceIndexComboBox->currentIndex(),1);
-            if(ret!=1)
-            {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("配置设备失败 USB_CAN_status =5！"));
-                USB_CAN_status = 3;
-                return;
-            }
-            ui->channelIndexComboBox->setDisabled(true);
-            ui->channelIndexComboBox->setEnabled(false);
-            ui->Connect_USB_CAN->setEnabled(false);
-            ui->Close_CAN->setEnabled(true);
-            ui->updateFirmwarePushButton->setEnabled(true);
-            ui->newBaudRateComboBox->setEnabled(true);
-            ui->allNodeCheckBox->setEnabled(true);
-            ui->baudRateComboBox->setEnabled(false);
-            ui->deviceIndexComboBox->setEnabled(false);
-            ui->channelIndexComboBox->setEnabled(false);
-             USB_CAN_status = 0x04;
-             VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),0);
-             VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),1);
-        }
-    }
+}
 
 void MainWindow::on_Close_CAN_clicked()
 {
@@ -945,36 +901,6 @@ void MainWindow::on_Close_CAN_clicked()
     if(ui->deviceIndexComboBox->currentIndex() != 2)
         {
             ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
-            if(ret != 1)
-                {
-                    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("复位设备失败！"));
-                }
-            else
-                {
-                     USB_CAN_status = 0;
-                }
-            ret = VCI_CloseDevice(4,ui->deviceIndexComboBox->currentIndex());
-            if(ret != 1)
-                {
-                    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("关闭设备失败！"));
-                }
-            else
-                {
-                     USB_CAN_status = 0;
-                }
-        }
-    else if(ui->deviceIndexComboBox->currentIndex() == 2)
-        {
-            ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),0);
-            if(ret != 1)
-                {
-                    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("复位设备失败！"));
-                }
-            else
-                {
-                     USB_CAN_status = 0;
-                }
-            ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),1);
             if(ret != 1)
                 {
                     QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("复位设备失败！"));
