@@ -52,7 +52,7 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
     ui->firmwareLineEdit->setText(fileName);
 #if DEBUG
     qDebug()<<"uui->nodeListTableWidget->rowCount() = "<<ui->nodeListTableWidget->rowCount();
-     qDebug()<<"ui->nodeListTableWidget->columnCount() = "<<ui->nodeListTableWidget->currentColumn();
+    qDebug()<<"ui->nodeListTableWidget->columnCount() = "<<ui->nodeListTableWidget->currentColumn();
 #endif
 }
 
@@ -289,7 +289,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            {
                                if(pack_info.data_type == DATA_BASE_ADDR||pack_info.data_type == DATA_END)//判断该行的数据是,如果是表示基地址
                                {
-                                 status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,100);
+                                 status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,120);
                                    if(status != 0x00)
                                    {
                                      #if DEBUG
@@ -309,7 +309,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                }
                                else if(send_data.line_cnt == send_data.line_num)//到了指定的行数进行数据发送
                                {
-                                   status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,100);
+                                   status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,120);
                                      if(status != 0x00)
                                      {
                                         #if DEBUG
