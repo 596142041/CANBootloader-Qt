@@ -1,7 +1,7 @@
 
 QT       += core gui
 
-TARGET = USB2CANBootloader
+TARGET =  CANBootloader
 TEMPLATE = app
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
