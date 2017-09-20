@@ -66,13 +66,14 @@ int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
             return i;
         }
     }
-
     return 0;
 }
 
 void MainWindow::on_updateFirmwarePushButton_clicked()
 {
     QTime time;
+    unsigned char current_chip_model = 0;
+    FILE_type file_type = File_None;
     time.start();
     int ret;
     Device_INFO  DEVICE_INFO;
@@ -83,7 +84,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     {
         if(ui->nodeListTableWidget->rowCount()<=0)
         {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无任何节点！"));
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("无任何节点！")
+                                 );
             return;
         }
     }
@@ -91,7 +95,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     {
         if(ui->nodeListTableWidget->currentIndex().row()<0)
         {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("请选择节点！"));
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("请选择节点！")
+                                 );
             return;
          }
     }
@@ -117,7 +124,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                             CAN_BL_BOOT);
                         if(ret != CAN_SUCCESS)
                         {
-                            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("执行固件程序失败！"));
+                            QMessageBox::warning(this,
+                                                 QStringLiteral("警告"),
+                                                 QStringLiteral("执行固件程序失败！")
+                                                 );
                             return;
                         }
                         Sleep(500);
@@ -127,11 +137,100 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     else
     {
         NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
+        if(ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),3)->text().startsWith("STM32") == true)
+            {
+                current_chip_model = 1;
+                #if DEBUG
+                    qDebug()<<"当前选中芯片为ST的STM32芯片";
+                #endif
+            }
+        else if(ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),3)->text().startsWith("TMS320") == true)
+            {
+                current_chip_model = 2;
+                #if DEBUG
+                 qDebug()<<"当前选中芯片为TI的DSP芯片";
+                #endif
+            }
         #if DEBUG
-         qDebug()<<""<<NodeAddr;
+         qDebug()<<"节点地址 = "<<NodeAddr;
         #endif
-        ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(), ui->channelIndexComboBox->currentIndex(), NodeAddr,
-                            &DEVICE_INFO.FW_Version,&DEVICE_INFO.FW_TYPE.all,100);
+         //判断当前选中的文件类型是否正确,同时判断文件类型,用于区分后续的发送文件的方式及其格式
+         switch (current_chip_model)
+         {
+             case 1:
+                 //当前选中的是STM32系列芯片,烧写文件可为bin和hex文件,需要判断选中的文件类型;
+                 if((ui->firmwareLineEdit->text().endsWith("bin") == false)&&\
+                    (ui->firmwareLineEdit->text().endsWith("hex") == false))
+                     {
+                         QMessageBox::warning(this,
+                                              QStringLiteral("警告"),
+                                              QStringLiteral("选中文件类型错误,当前芯片为STM32系列芯片,请选hex文件或者bin文件")
+                                              );
+                         return;
+                     }
+                 else if(ui->firmwareLineEdit->text().endsWith("bin") == true)
+                     {
+                         file_type = File_bin;
+#if DEBUG
+            qDebug()<<"当前芯片为STM32系列芯片,文件类型为bin文件 file_type = "<<file_type;
+#endif
+
+                     }
+                  else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
+                     {
+                          file_type = File_hex;
+#if DEBUG
+            qDebug()<<"当前芯片为STM32系列芯片,文件类型为hex文件 file_type ="<<file_type;
+#endif
+                     }
+                    else
+                     {
+                         QMessageBox::warning(this,
+                                              QStringLiteral("警告"),
+                                              QStringLiteral("选中文件类型错误,当前芯片为STM32系列芯片,文件类型未知")
+                                              );
+                         return;
+                     }
+                 break;
+              case 2:
+                 //当前选中的是为TI的C2000系列芯,烧写文件hex文件,需要判断选中的文件类型;
+                 if((ui->firmwareLineEdit->text().endsWith("hex") == false))
+                     {
+                         QMessageBox::warning(this,
+                                              QStringLiteral("警告"),
+                                              QStringLiteral("选中文件类型错误,当前芯片为TI的C2000系列芯片,请选hex文件")
+                                              );
+                         return;
+                     }
+                 else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
+                    {
+                         file_type = File_hex;
+#if DEBUG
+            qDebug()<<"当前芯片为TI的C2000系列芯片,文件类型为hex文件 file_type ="<<file_type;
+#endif
+                    }
+                 else
+                  {
+                      QMessageBox::warning(this,
+                                           QStringLiteral("警告"),
+                                           QStringLiteral("选中文件类型错误,当前芯片为TI的C2000系列芯片,文件类型未知")
+                                           );
+                      return;
+                  }
+                 break;
+             default:
+                 QMessageBox::warning(this,
+                                      QStringLiteral("警告"),
+                                      QStringLiteral("芯片类型未知"));
+                 return;
+                 break;
+             }
+        ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
+                               ui->channelIndexComboBox->currentIndex(),
+                               NodeAddr,
+                               &DEVICE_INFO.FW_Version,
+                               &DEVICE_INFO.FW_TYPE.all,
+                               120);
         if(ret == CAN_SUCCESS)
         {
             if(DEVICE_INFO.FW_TYPE.bits.FW_TYPE != CAN_BL_BOOT){//当前固件不为Bootloader
@@ -141,7 +240,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                     CAN_BL_BOOT);
                 if(ret != CAN_SUCCESS)
                    {
-                        QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("执行固件程序失败！"));
+                        QMessageBox::warning(this,
+                                             QStringLiteral("警告"),
+                                             QStringLiteral("执行固件程序失败！")
+                                             );
                         return;
                     }
                 Sleep(500);
@@ -149,7 +251,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         }
         else
         {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("节点检测失败-1！"));
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("节点检测失败-1！")
+                                 );
             return;
         }
     }
@@ -159,13 +264,23 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     QFile firmwareFile(ui->firmwareLineEdit->text());
     if (firmwareFile.open(QFile::ReadOnly))
     {
+        QProgressDialog writeDataProcess(QStringLiteral("正在更新固件..."),
+                                         QStringLiteral("取消"),
+                                         0,
+                                         firmwareFile.size(),
+                                         this);
+        writeDataProcess.setWindowTitle(QStringLiteral("更新固件"));
         if(!ui->allNodeCheckBox->isChecked())
         {
             #if DEBUG
               qDebug()<<"NodeAddr = "<<NodeAddr;
             #endif
-            ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,
-                                &DEVICE_INFO.FW_Version,&DEVICE_INFO.FW_TYPE.all,100);
+            ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
+                                   ui->channelIndexComboBox->currentIndex(),
+                                   NodeAddr,
+                                   &DEVICE_INFO.FW_Version,
+                                   &DEVICE_INFO.FW_TYPE.all,
+                                   100);
             #if DEBUG
              qDebug()<<"ret = "<<ret<<"CAN_SUCCESS = "<<CAN_SUCCESS;
             #endif
@@ -173,79 +288,157 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             {
                 if(DEVICE_INFO.FW_TYPE.bits.FW_TYPE != CAN_BL_BOOT)
                 {
-                    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("当前固件不为Bootloader固件！"));
+                    QMessageBox::warning(this,
+                                         QStringLiteral("警告"),
+                                         QStringLiteral("当前固件不为Bootloader固件！")
+                                         );
                     return;
                 }
             }
             else
             {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("节点检测失败-2！"));
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("节点检测失败-2！")
+                                     );
                 return;
             }
         }
-        unsigned int erase_timeout_temp;
-        erase_timeout_temp = firmwareFile.size()/0x10000;
-        if(firmwareFile.size()%0x10000 != 0)
-            {
-               erase_timeout_temp = erase_timeout_temp+1;
-            }
-            else
-            {
-                erase_timeout_temp = erase_timeout_temp;
-            }
-        if(erase_timeout_temp >5||erase_timeout_temp == 5)
-            {
-                erase_timeout_temp = 5;
-            }
-        erase_timeout_temp = erase_timeout_temp*2000;
-#if DEBUG
-        qDebug()<<"erase_timeout_temp = "<<erase_timeout_temp;
-#endif
-        ret = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),
-                           ui->channelIndexComboBox->currentIndex(),
-                           NodeAddr,
-                           firmwareFile.size(),
-                           erase_timeout_temp);
-        if(ret != CAN_SUCCESS)
-        {
-                qDebug()<<"ret = "<<ret;
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("擦出Flash失败！"));
-            return;
-        }
-        if(ui->allNodeCheckBox->isChecked())
-        {
-            Sleep(1000);
-        }
-
-        QProgressDialog writeDataProcess(QStringLiteral("正在更新固件..."),QStringLiteral("取消"),0,firmwareFile.size(),this);
-        writeDataProcess.setWindowTitle(QStringLiteral("更新固件"));
-        writeDataProcess.setModal(true);
-        writeDataProcess.show();
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        //--------------------------------------------------------//
-        writeDataProcess.setValue(0);
-        int status = CAN_SUCCESS;
-        SEND_INFO send_data;
-        send_data.read_start_flag = 0;
-        send_data.data_cnt  = 0;
-        send_data.data_addr = 0x00;
-        send_data.data_len  = 0;
-        send_data.line_cnt  = 0;
-        send_data.line_num  = 16;
-        qint64 test = 0xFF;
+        unsigned int erase_timeout_temp = 0;
+        qint64 size_temp = 0;
         PACK_INFO pack_info;
-        int  hex_size = 0;
+        SEND_INFO send_data;
+        int status = CAN_SUCCESS;
+        send_data.file_type = File_None;
+        send_data.pack_cnt = 0;
+        int file_size = 0 ;
         char hex_buf[128];
         char bin_buf[1028];
-        ret = firmwareFile.seek(0);//移动文件指针到文件头
-        if(ret == 0)
+        Data_clear((char *)send_data.data,1028);
+        if(file_type == File_hex)
         {
-            #if DEBUG
-                qDebug() << "firmwareFile.seek 失败";
-            #endif
-            return;
-        }
-        while(hex_size <firmwareFile.size())
+            send_data.file_type = file_type;
+            //此处的擦除超时时间需要注意,针对STM32和DSP芯片计算不一样
+            if(current_chip_model == 2)//此处是计算DSP的擦除超时时间
+                {
+                    erase_timeout_temp = firmwareFile.size()/0x10000;
+                    if(firmwareFile.size()%0x10000 != 0)
+                        {
+                           erase_timeout_temp = erase_timeout_temp+1;
+                        }
+                    else
+                        {
+                            erase_timeout_temp = erase_timeout_temp;
+                        }
+                    if(erase_timeout_temp >5||erase_timeout_temp == 5)
+                        {
+                            erase_timeout_temp = 5;
+                        }
+                    erase_timeout_temp = erase_timeout_temp*2000;
+                    size_temp = firmwareFile.size();
+                }
+            else if(current_chip_model == 1)//此处是计算STM32擦除超时时间
+                {
+                    unsigned long int line_cnt_temp = 0;
+                    size_temp = firmwareFile.size()-28;//减掉文件头和文件尾的数据长度
+                    line_cnt_temp = size_temp%45;//此处计算hex有多少行
+                    if(line_cnt_temp == 0)
+                        {
+                            line_cnt_temp = ( unsigned long int)(size_temp/45)+1;
+                        }
+                    else if(line_cnt_temp != 0)
+                        {
+                             line_cnt_temp = ( unsigned long int)(size_temp/45)+2;
+                        }
+                    size_temp = line_cnt_temp*16;//近似计算hex真实的文件长度
+                    if(size_temp <= 64*1024)
+                        {
+                            if(size_temp%0xFFFF == 0)
+                                {
+                                    erase_timeout_temp = size_temp/0xFFFF;
+                                }
+                            else
+                                {
+                                   erase_timeout_temp = (size_temp/0xFFFF)+1;
+                                }
+                            erase_timeout_temp = 550*erase_timeout_temp;
+                        }
+                    else if((size_temp>64*1024)&&(size_temp<=128*1024))
+                        {
+                            erase_timeout_temp =4*550+1100;//都表示超时时间为毫秒
+                        }
+                    else if((size_temp>128*1024)&&(size_temp<=850*1024))
+                        {
+                            if((size_temp-128*1024)%0x20000 == 0)
+                                {
+                                    erase_timeout_temp = size_temp/0x20000;
+                                }
+                            else
+                                {
+                                   erase_timeout_temp = (size_temp/0x20000)+1;
+                                }
+                            erase_timeout_temp = 2000*erase_timeout_temp+4*550+1100;
+                        }
+                    else if(size_temp>850*1024)
+                        {
+                            QMessageBox::warning(this,
+                                                 QStringLiteral("警告"),
+                                                 QStringLiteral("文件过大,超过1M")
+                                                 );
+                            return;
+                        }
+                    else
+                        {
+                            QMessageBox::warning(this,
+                                                 QStringLiteral("警告"),
+                                                 QStringLiteral("文件大小未知")
+                                                 );
+                            return;
+                        }
+                }
+            //超时时间计算结束
+#if DEBUG
+            qDebug()<<"erase_timeout_temp = "<<erase_timeout_temp;
+#endif
+            status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),
+                           ui->channelIndexComboBox->currentIndex(),
+                           NodeAddr,
+                           size_temp,
+                           erase_timeout_temp);
+            if(status != CAN_SUCCESS)
+            {
+                qDebug()<<"ret = "<<ret;
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("擦出Flash失败！")
+                                     );
+                return;
+            }
+            if(ui->allNodeCheckBox->isChecked())
+            {
+                Sleep(1000);
+            }
+            writeDataProcess.setModal(true);
+            writeDataProcess.show();
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+        //--------------------------------------------------------//
+            writeDataProcess.setValue(0);
+            send_data.read_start_flag = 0;
+            send_data.data_cnt  = 0;
+            send_data.data_addr = 0x00;
+            send_data.data_len  = 0;
+            send_data.line_cnt  = 0;
+            send_data.line_num  = 16;
+            qint64 test = 0xFF;
+            ret = firmwareFile.seek(0);//移动文件指针到文件头
+            if(ret == 0)
+            {
+                #if DEBUG
+                    qDebug() << "firmwareFile.seek 失败";
+                #endif
+                return;
+            }
+            while(file_size <firmwareFile.size())//file_size
              {
                  firmwareFile.readLine((char*)hex_buf,10);
                  if(hex_buf[0] == ':')//表示是起始标志,判断刚才读取的数据中的第一个字节是否是起始标志
@@ -255,31 +448,23 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                         #endif
                        hex_to_bin(&hex_buf[1],bin_buf,8);//将读取的9个字节后面8字节由ASC_II转换为hex(16进制数据)
                        pack_info.data_type = bin_buf[6]<<4|bin_buf[7];
+                        #if DEBUG
                        switch (pack_info.data_type)
                            {
-                           case DATA_BASE_ADDR:
-                                #if DEBUG
-                                    qDebug() << " DATA_BASE_ADDR";
-                                #endif
+                           case DATA_BASE_ADDR: qDebug() << " DATA_BASE_ADDR";
                                break;
-                           case DATA_Rrecord:
-                                 #if DEBUG
-                                qDebug() << " DATA_Rrecord";
-                                 #endif
+                           case DATA_Rrecord:   qDebug() << " DATA_Rrecord";
                                break;
-                           case DATA_END:
-                                #if DEBUG
-                                qDebug() << " DATA_END";
-                                #endif
+                           case DATA_END:       qDebug() << " DATA_END";
                                  break;
                            default:
                                break;
                            }
+                        #endif
                        //---------------------------------------------------------
                        if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
                            {
                                send_data.read_start_flag = 1;
-                               send_data.send_state = 0;
                                send_data.line_num = 16;
                                send_data.line_cnt = 0;
                                send_data.data_cnt = 0;
@@ -289,14 +474,19 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            {
                                if(pack_info.data_type == DATA_BASE_ADDR||pack_info.data_type == DATA_END)//判断该行的数据是,如果是表示基地址
                                {
-                                 status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,120);
+                                 status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),
+                                                        ui->channelIndexComboBox->currentIndex(),
+                                                        NodeAddr,
+                                                        &send_data,
+                                                        120);
                                    if(status != 0x00)
                                    {
                                      #if DEBUG
-                                       qDebug() << " write faile-1"<<"status = "<<status;
+                                       qDebug() << " write faile-1"<<"status = "<<status<<"  send_data.pack_cnt = "<< send_data.pack_cnt;
                                      #endif
                                        return ;
                                    }
+                                   send_data.pack_cnt++;
                                    status = 0xFF;
                                    send_data.data_len = 0;
                                    send_data.data_cnt = 0;
@@ -309,14 +499,18 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                }
                                else if(send_data.line_cnt == send_data.line_num)//到了指定的行数进行数据发送
                                {
-                                   status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,&send_data,120);
+                                   status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),
+                                                          ui->channelIndexComboBox->currentIndex(),
+                                                          NodeAddr,&send_data,
+                                                          120);
                                      if(status != 0x00)
                                      {
                                         #if DEBUG
-                                          qDebug() << " write faile-2"<<"status = "<<status;
+                                          qDebug() << " write faile-2"<<"status = "<<status<<" send_data.pack_cnt = "<< send_data.pack_cnt;
                                         #endif
                                          return ;
                                      }
+                                   send_data.pack_cnt++;
                                    status = 0xFF;
                                    send_data.data_len = 0;
                                    send_data.data_cnt = 0;
@@ -388,11 +582,11 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             qDebug() << "test = "<<test;
                          #endif
                      }
-                 hex_size = firmwareFile.pos();
+                 file_size = firmwareFile.pos();
                 #if DEBUG
-                 qDebug() << "hex_size = "<<hex_size;
+                 qDebug() << "file_size = "<<file_size;
                 #endif
-                 writeDataProcess.setValue(hex_size);
+                 writeDataProcess.setValue(file_size);
                  QCoreApplication::processEvents(QEventLoop::AllEvents);
                  if(writeDataProcess.wasCanceled())
                  {
@@ -403,29 +597,174 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                  }
              }
         //----------------------------------------------------------//
-        writeDataProcess.setValue(firmwareFile.size());
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        if(writeDataProcess.wasCanceled())
-        {
-            return;
+            writeDataProcess.setValue(firmwareFile.size());
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+            if(writeDataProcess.wasCanceled())
+            {
+                return;
+            }
+
         }
+        else if(file_type == File_bin)
+        {
+            file_size = 0;
+            send_data.pack_size = 1024;
+            send_data.file_type = file_type;
+            //此处是计算擦除超时时间
+            size_temp = firmwareFile.size();
+            if(size_temp <= 64*1024)
+            {
+                if(size_temp%0xFFFF == 0)
+                {
+                    erase_timeout_temp = size_temp/0xFFFF;
+                }
+                else
+                {
+                   erase_timeout_temp = (size_temp/0xFFFF)+1;
+                }
+                erase_timeout_temp = 550*erase_timeout_temp;
+            }
+            else if((size_temp>64*1024)&&(size_temp<=128*1024))
+            {
+                erase_timeout_temp =4*550+1000;//都表示超时时间为毫秒
+            }
+            else if((size_temp>128*1024)&&(size_temp<=850*1024))
+            {
+                if((size_temp-128*1024)%0x20000 == 0)
+                {
+                    erase_timeout_temp = size_temp/0x20000;
+                }
+                else
+                {
+                   erase_timeout_temp = (size_temp/0x20000)+1;
+                }
+                    erase_timeout_temp = 2000*erase_timeout_temp+4*550+1000;
+            }
+            else if(size_temp>850*1024)
+            {
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("文件过大,超过1M")
+                                     );
+                return;
+            }
+            else
+            {
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("文件大小未知")
+                                     );
+                return;
+            }
+            //开始擦除文件命令
+              status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),
+                       ui->channelIndexComboBox->currentIndex(),
+                       NodeAddr,
+                       firmwareFile.size(),
+                       erase_timeout_temp);
+               qDebug()<<"erase_timeout_temp = "<<erase_timeout_temp<<"firmwareFile.size() = "<<firmwareFile.size();
+            if(status != CAN_SUCCESS)
+            {
+                qDebug()<<"status = "<<status;
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("擦出Flash失败！")
+                                     );
+                return;
+            }
+            if(ui->allNodeCheckBox->isChecked())
+            {
+                Sleep(1000);
+            }
+            //------擦除文件命令结束
+
+            //准备写入数据
+            //int read_data_num;
+            writeDataProcess.setModal(true);
+            writeDataProcess.show();
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+            file_size = 0;
+           while(file_size < firmwareFile.size())
+            {
+                send_data.data_len = firmwareFile.read((char*)send_data.data,send_data.pack_size);
+#if DEBUG
+                qDebug()<<"send_data.data_len = "<<send_data.data_len;
+#endif
+                send_data.data_addr = file_size;
+                status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),
+                                       ui->channelIndexComboBox->currentIndex(),
+                                       NodeAddr,
+                                       &send_data,
+                                       120);
+                if(status != CAN_SUCCESS)
+                {
+                    #if DEBUG
+                      qDebug() << " write bin file faile "<<"status = "<<status;
+                    #endif
+                     return ;
+                }
+                file_size =file_size+ send_data.data_len;
+#if DEBUG
+      qDebug()<<"file_size= "<<file_size;
+#endif
+                writeDataProcess.setValue(file_size);
+                QCoreApplication::processEvents(QEventLoop::AllEvents);
+                if(writeDataProcess.wasCanceled())
+                {
+                    return;
+                }
+                if(ui->allNodeCheckBox->isChecked())
+                {
+                    #ifndef OS_UNIX
+                        Sleep(10);
+                    #else
+                        usleep(10*1000);
+                    #endif
+                }
+
+            }
+            writeDataProcess.setValue(firmwareFile.size());
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+            if(writeDataProcess.wasCanceled())
+            {
+                return;
+            }
+        }
+        else
+            {
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("文件类型错误！")
+                                     );
+                return;
+            }
     }
     else
     {
-        QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("打开固件文件失败！"));
+        QMessageBox::warning(this,
+                             QStringLiteral("警告"),
+                             QStringLiteral("打开固件文件失败！")
+                             );
         return;
     }
     //执行固件
     ret = CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
     if(ret != CAN_SUCCESS)
     {
-        QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("执行固件程序失败！"));
+        QMessageBox::warning(this,
+                             QStringLiteral("警告"),
+                             QStringLiteral("执行固件程序失败！")
+                             );
     }
     Sleep(50);
     if(!ui->allNodeCheckBox->isChecked())
     {
-         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(), ui->channelIndexComboBox->currentIndex(),
-                                NodeAddr, &DEVICE_INFO.FW_Version, &DEVICE_INFO.FW_TYPE.all,100);
+         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
+                                ui->channelIndexComboBox->currentIndex(),
+                                NodeAddr,
+                                &DEVICE_INFO.FW_Version,
+                                &DEVICE_INFO.FW_TYPE.all,
+                                100);
         if(ret == CAN_SUCCESS)
         {
             QString str;
@@ -441,15 +780,22 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),2)->setText(str);
             //--------------------添加烧写时间长度
             str.sprintf("%2.3f s",time.elapsed()/1000.0);
-            QMessageBox::warning(this,QStringLiteral("时长"),str);
+            QMessageBox::warning(this,
+                                 QStringLiteral("时长"),
+                                 str
+                                 );
         }
         else
         {
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("执行固件程序失败！"));
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("执行固件程序失败-1！")
+                                 );
         }
     }
     qDebug()<<time.elapsed()/1000.0<<"s";
 }
+
 void MainWindow::on_openFirmwareFileAction_triggered()
 {
     on_openFirmwareFilePushButton_clicked();
@@ -475,14 +821,22 @@ void MainWindow::on_scanNodeAction_triggered()
     }
     if( USB_CAN_status != 0x04)
     {
-          QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("打开设备失败！"));
+          QMessageBox::warning(this,
+                               QStringLiteral("警告"),
+                               QStringLiteral("打开设备失败！")
+                               );
           return ;
     }
     ui->nodeListTableWidget->verticalHeader()->hide();
     ui->nodeListTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->nodeListTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->nodeListTableWidget->setRowCount(0);
-    QProgressDialog scanNodeProcess(QStringLiteral("正在扫描节点..."),QStringLiteral("取消"),0,endAddr-startAddr,this);
+    QProgressDialog scanNodeProcess(QStringLiteral("正在扫描节点..."),
+                                    QStringLiteral("取消"),
+                                    0,
+                                    endAddr-startAddr,
+                                    this
+                                    );
     scanNodeProcess.setWindowTitle(QStringLiteral("扫描节点"));
     scanNodeProcess.setModal(true);
     scanNodeProcess.show();
@@ -534,21 +888,30 @@ void MainWindow::on_scanNodeAction_triggered()
             #if DEBUG
             qDebug()<<"DEVICE_INFO.FW_TYPE.bits.Chip_Value = "<<DEVICE_INFO.FW_TYPE.bits.Chip_Value<<"startAddr = "<<startAddr<<"chip_temp = "<<chip_temp;
             #endif
-            switch (chip_temp)
+            //此处是对ini配置文件读取
+            //用于来判断芯片类型
+            //-----------------------------------------------------------------------------
+            str = "None";
+            QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini";
+            QSettings settings(file_path, QSettings::IniFormat);
+            settings.beginGroup("chip");
+             chip_list = settings.allKeys();
+            for (int i = 0; i < chip_list.size(); ++i)
                 {
-                case STM32F407IGT6:
-                    str = "STM32F407IGT6";
-                    break;
-                case TMS320F28335:
-                     str = "TMS320F28335";
-                    break;
-                case TMS320F2808:
-                    str = "TMS320F2808";
-                    break;
-                default:
-                     str = "None";
-                    break;
+                    if(chip_temp == (uint32_t)(settings.value(chip_list.at(i)).toInt()))
+                        {
+                            str = chip_list.at(i);
+#if DEBUG
+                            qDebug()<<"keys.at= "<< chip_list.at(i)<<""<<settings.value(chip_list.at(i)).toInt();
+#endif
+                            break;
+                        }
+                    else
+                        {
+                            str = "None";
+                        }
                 }
+            //---------------------------------------------------------------------------------
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,3,item);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,3)->setTextAlignment(Qt::AlignHCenter);
@@ -564,13 +927,6 @@ void MainWindow::on_scanNodeAction_triggered()
     }
 }
 
-/*********************************************
- * 目前该按钮主要适用于我测试相关的功能函数
- *
- *
- *
- *
-*/
 void MainWindow::on_Fun_test_clicked()
 {
     int status = 0;
@@ -657,7 +1013,6 @@ void MainWindow::on_Fun_test_clicked()
                   if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
                       {
                           send_data.read_start_flag = 1;
-                          send_data.send_state = 0;
                           send_data.line_num = 16;
                           send_data.line_cnt = 0;
                           send_data.data_cnt = 0;
@@ -780,6 +1135,7 @@ void MainWindow::on_Fun_test_clicked()
         }
      CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,CAN_BL_APP);
 }
+
 void MainWindow::on_contactUsAction_triggered()
 {
     QString AboutStr;
@@ -809,10 +1165,26 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 {
     int ret;
     bool state;
+    // QStringList   chip_list;
+    QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini"; ;
+    QSettings settings(file_path, QSettings::IniFormat);
+    settings.beginGroup("chip");
+     chip_list = settings.allKeys();
+#if DEBUG
+    qDebug()<<"keys.size() = "<<chip_list.size();
+    for (int i = 0; i < chip_list.size(); ++i)
+        {
+             qDebug()<<"keys.at= "<< chip_list.at(i)<<""<<settings.value(chip_list.at(i)).toInt();   // returns 5;
+        }
+#endif
+
     state = VCI_OpenDevice(4,ui->deviceIndexComboBox->currentIndex(),0);
     if(!state)
     {
-        QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("打开设备失败！"));
+        QMessageBox::warning(this,
+                             QStringLiteral("警告"),
+                             QStringLiteral("打开设备失败！")
+                             );
          ui->Connect_USB_CAN->setText(tr("无设备"));
          USB_CAN_status = 1;
         return;
@@ -828,7 +1200,10 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     if(USB_CAN_status == 1)
         {
 
-            QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("无设备连接！"));
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("无设备连接！")
+                                 );
         }
     CBL_CMD_LIST CMD_List;
     QString cmdStr[]={"Erase","Write","Check","Excute","WriteInfo","CmdFaild","CmdSuccess","SetBaudRate"};
@@ -870,7 +1245,10 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             ret = VCI_InitCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),&VCI_init);
             if(ret!=1)
             {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("配置设备失败！"));
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("配置设备失败！")
+                                     );
                 USB_CAN_status = 3;
                 return;
             }
@@ -878,7 +1256,10 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             ret = VCI_StartCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
             if(ret!=1)
             {
-                QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("配置设备失败 USB_CAN_status = 6 ！"));
+                QMessageBox::warning(this,
+                                     QStringLiteral("警告"),
+                                     QStringLiteral("配置设备失败 USB_CAN_status = 6 ！")
+                                     );
                 USB_CAN_status = 3;
                 return;
             }
@@ -903,7 +1284,10 @@ void MainWindow::on_Close_CAN_clicked()
             ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
             if(ret != 1)
                 {
-                    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("复位设备失败！"));
+                    QMessageBox::warning(this,
+                                         QStringLiteral("警告"),
+                                         QStringLiteral("复位设备失败！")
+                                         );
                 }
             else
                 {
@@ -912,7 +1296,10 @@ void MainWindow::on_Close_CAN_clicked()
             ret = VCI_CloseDevice(4,ui->deviceIndexComboBox->currentIndex());
             if(ret != 1)
                 {
-                    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("关闭设备失败！"));
+                    QMessageBox::warning(this,
+                                         QStringLiteral("警告"),
+                                         QStringLiteral("关闭设备失败！")
+                                         );
                 }
             else
                 {
@@ -928,6 +1315,7 @@ void MainWindow::on_Close_CAN_clicked()
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
 }
+
 void MainWindow::on_action_Open_CAN_triggered()
 {
 on_Connect_USB_CAN_clicked();
@@ -1002,6 +1390,7 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
     VCI_ClearBuffer(4,DevIndex,CANIndex);
     return CAN_SUCCESS;
 }
+
 int MainWindow::CAN_BL_init(PCBL_CMD_LIST pCmdList)
 {
 
@@ -1108,7 +1497,8 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
     VCI_ClearBuffer(4,DevIndex,CANIndex);
     return CAN_SUCCESS;
 }
-int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut)
+
+int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut)
 {
         unsigned short int i;
         unsigned short int  cnt = 0;
@@ -1141,15 +1531,28 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
         //0-3字节表示地址偏移 4-7表示数据包的大小
         Bootloader_data.DLC = 8;
         Bootloader_data.ExtId.bit.cmd = cmd_list.WriteInfo;
-        Bootloader_data.data[0] = ( send_data->data_addr & 0xFF000000 ) >> 24;
-        Bootloader_data.data[1] = ( send_data->data_addr & 0xFF0000 ) >> 16;
-        Bootloader_data.data[2] = ( send_data->data_addr & 0xFF00 ) >> 8;
-        Bootloader_data.data[3] = ( send_data->data_addr & 0x00FF );
-
-        Bootloader_data.data[4] = ( ( send_data->data_len + 2 ) & 0xFF000000 ) >> 24;
-        Bootloader_data.data[5] = ( ( send_data->data_len + 2 ) & 0xFF0000 ) >> 16;
-        Bootloader_data.data[6] = ( ( send_data->data_len + 2 ) & 0xFF00 ) >> 8;
-        Bootloader_data.data[7] = ( ( send_data->data_len + 2 ) & 0x00FF );
+      //  Bootloader_data.data[0] = ( send_data->data_addr & 0xFF000000 ) >> 24;
+        if(send_data->file_type == File_bin)
+            {
+                 Bootloader_data.data[0] = 0xF0|send_data->file_type;
+            }
+        else if(send_data->file_type == File_hex)
+            {
+                Bootloader_data.data[0] = 0xF0|send_data->file_type;
+            }
+        else
+            {
+                 Bootloader_data.data[0] = 0xF0|File_None;
+            }
+        //----------------------------------------------------------------------
+        Bootloader_data.data[1] = ( send_data->data_addr & 0x00FF0000 )>> 0x10;
+        Bootloader_data.data[2] = ( send_data->data_addr & 0x0000FF00 )>> 0x08;
+        Bootloader_data.data[3] = ( send_data->data_addr & 0x000000FF )>> 0x00;
+//----------------------------------------------------------------------
+        Bootloader_data.data[4] = ( ( send_data->data_len + 2 ) & 0xFF000000 )>> 0x18;
+        Bootloader_data.data[5] = ( ( send_data->data_len + 2 ) & 0x00FF0000 )>> 0x10;
+        Bootloader_data.data[6] = ( ( send_data->data_len + 2 ) & 0x0000FF00 )>> 0x08;
+        Bootloader_data.data[7] = ( ( send_data->data_len + 2 ) & 0x000000FF )>>0x00;
         can_send_msg.DataLen = Bootloader_data.DLC;
         can_send_msg.ExternFlag = Bootloader_data.IDE;
         can_send_msg.ID = Bootloader_data.ExtId.all;
@@ -1187,7 +1590,7 @@ int MainWindow:: CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,
             case 0:
                    return CAN_BL_ERR_TIME_OUT;
                    break;
-             case -1:
+            case -1:
                     return CAN_ERR_USB_READ_FAIL;
                     break;
             default:
@@ -1335,7 +1738,7 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
 }
 //-----------------------------------------------------------------------------------
 //以下代码均为对hex文件解码需要的代码
-void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int len)
+void MainWindow::Data_clear_int(  unsigned short  int *data,unsigned long int len)
     {
         unsigned long int i;
         for(i = 0;i < len;i++)
@@ -1345,7 +1748,7 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
         }
     }
 
-  void MainWindow:: Data_clear(  char *data,unsigned long int len)
+void MainWindow::Data_clear(  char *data,unsigned long int len)
 {
      unsigned long int i;
      for(i = 0;i < len;i++)
@@ -1354,7 +1757,7 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
          data++;
      }
 }
-  unsigned char MainWindow:: convertion(  char *hex_data)
+unsigned char MainWindow::convertion(  char *hex_data)
 {
     unsigned char bin_data = 0xFF;
     if(*hex_data >= '0'&&*hex_data <= '9')
@@ -1368,7 +1771,7 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
     }
     return bin_data;
 }
-  void MainWindow:: hex_to_bin(  char *hex_src,  char *bin_dst,unsigned char len)
+void MainWindow::hex_to_bin(  char *hex_src, char *bin_dst,unsigned char len)
 {
     unsigned char i;
     for(i = 0;i <len;i++)
@@ -1378,7 +1781,7 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
         hex_src++;
     }
 }
- unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short int len)
+unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short int len)
 {
     unsigned short int crc_res = 0xFFFF;
      while (len--)
@@ -1398,4 +1801,3 @@ void MainWindow:: Data_clear_int(  unsigned short  int *data,unsigned long int l
      }
      return crc_res;
 }
-
