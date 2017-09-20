@@ -46,8 +46,6 @@
 #define SECTORG   (Uint16)0x0040
 #define SECTORH   (Uint16)0x0080
 //------------------------------------------------
-#define  FW_TYPE_APP  0xAAAAAAAA
-#define  FW_TYPE_BOOT 0x55555555
 //6.函数返回错误代码定义
 #define CAN_SUCCESS                     (0)   //函数执行成功
 #define CAN_ERR_NOT_SUPPORT             (-1)  //适配器不支持该函数
@@ -61,14 +59,19 @@
 
 typedef struct _PACK_INFO
 {
+    unsigned char      data_type;
     unsigned short int data_len;
     unsigned long  int data_addr;
     unsigned long  int data_base_addr;
     unsigned short int data_addr_offset;
-    unsigned char      data_type;
-    unsigned short int      Data[64];
+    unsigned short int Data[64];
 }PACK_INFO;
-
+typedef enum
+{
+    File_None = 0,
+    File_bin  = 1,
+    File_hex  = 2
+}FILE_type;
 //----------------------
 typedef struct _Bootloader_data
 {
@@ -101,6 +104,9 @@ typedef struct _Boot_CMD_LIST
 } Boot_CMD_LIST;
 typedef struct _SEND_INFO
 {
+    FILE_type file_type;
+    unsigned short int pack_size;
+    unsigned short int pack_cnt;
     unsigned char line_num;//表示读取数据的行数,最大为2;
     unsigned char line_cnt;//表示读取文件的函数,最大值不能大于line_num
     unsigned char read_start_flag;//表示开始读取数据标志位
