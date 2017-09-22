@@ -41,6 +41,12 @@
               <property name="text">
                <string>节点地址</string>
               </property>
+              <property name="font">
+               <font>
+                <family>楷体</family>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
               </property>
@@ -48,6 +54,12 @@
              <column>
               <property name="text">
                <string>固件类型</string>
+              </property>
+              <property name="font">
+               <font>
+                <family>楷体</family>
+                <pointsize>10</pointsize>
+               </font>
               </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
@@ -57,6 +69,12 @@
               <property name="text">
                <string>固件版本</string>
               </property>
+              <property name="font">
+               <font>
+                <family>楷体</family>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
               </property>
@@ -64,6 +82,12 @@
              <column>
               <property name="text">
                <string>芯片型号</string>
+              </property>
+              <property name="font">
+               <font>
+                <family>楷体</family>
+                <pointsize>10</pointsize>
+               </font>
               </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
@@ -132,6 +156,12 @@
               <property name="text">
                <string>名称</string>
               </property>
+              <property name="font">
+               <font>
+                <family>楷体</family>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
               </property>
@@ -139,6 +169,12 @@
              <column>
               <property name="text">
                <string>值（Hex）</string>
+              </property>
+              <property name="font">
+               <font>
+                <family>楷体</family>
+                <pointsize>10</pointsize>
+               </font>
               </property>
               <property name="textAlignment">
                <set>AlignCenter</set>
