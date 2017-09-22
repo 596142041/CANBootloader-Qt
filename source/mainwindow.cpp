@@ -10,6 +10,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->cmdListTableWidget->setColumnWidth(0,180);
     ui->cmdListTableWidget->setColumnWidth(1,180);
+    ui->nodeListTableWidget->setColumnWidth(0,100);
+    ui->nodeListTableWidget->setColumnWidth(1,100);
+    ui->nodeListTableWidget->setColumnWidth(2,120);
+    ui->nodeListTableWidget->setColumnWidth(3,200);
     for(int i=0;i<ui->cmdListTableWidget->rowCount();i++)
     {
         ui->cmdListTableWidget->setRowHeight(i,35);
@@ -592,7 +596,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                  {
                      return;
                  }
-                 if(ui->allNodeCheckBox->isChecked()){
+                 if(ui->allNodeCheckBox->isChecked())
+				 {
                      Sleep(10);
                  }
              }
@@ -678,8 +683,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             }
             //------擦除文件命令结束
 
-            //准备写入数据
-            //int read_data_num;
+            //准备写入数据 
             writeDataProcess.setModal(true);
             writeDataProcess.show();
             QCoreApplication::processEvents(QEventLoop::AllEvents);
@@ -705,7 +709,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 }
                 file_size =file_size+ send_data.data_len;
 #if DEBUG
-      qDebug()<<"file_size= "<<file_size;
+				qDebug()<<"file_size= "<<file_size;
 #endif
                 writeDataProcess.setValue(file_size);
                 QCoreApplication::processEvents(QEventLoop::AllEvents);
@@ -776,7 +780,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 str = "APP";
             }
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),1)->setText(str);
-            str.sprintf("v%d.%d",(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)|((DEVICE_INFO.FW_Version>>16)&0xFF),(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)|(DEVICE_INFO.FW_Version&0xFF));
+            str.sprintf("v%d.%d",
+						(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)|((DEVICE_INFO.FW_Version>>16)&0xFF),
+						(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)|(DEVICE_INFO.FW_Version&0xFF)
+					   );
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),2)->setText(str);
             //--------------------添加烧写时间长度
             str.sprintf("%2.3f s",time.elapsed()/1000.0);
@@ -846,11 +853,11 @@ void MainWindow::on_scanNodeAction_triggered()
     {
         i++;
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
-                            ui->channelIndexComboBox->currentIndex(),
-                            startAddr,
-                            &DEVICE_INFO.FW_Version,
-                            &DEVICE_INFO.FW_TYPE.all,
-                            60);
+                               ui->channelIndexComboBox->currentIndex(),
+                               startAddr,
+                               &DEVICE_INFO.FW_Version,
+                               &DEVICE_INFO.FW_TYPE.all,
+                               60);
         if(ret == CAN_SUCCESS)
         {
             ui->nodeListTableWidget->setRowCount(ui->nodeListTableWidget->rowCount()+1);
@@ -863,7 +870,9 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,0)->setTextAlignment(Qt::AlignCenter);
             //--------------------------------------------------------------------------------------------------------
             str.sprintf("0x%X",DEVICE_INFO.FW_TYPE.all);
+			#if DEBUG
             qDebug()<<"DEVICE_INFO.FW_TYPE.all = "<<str;
+			#endif
             if(DEVICE_INFO.FW_TYPE.bits.FW_TYPE == CAN_BL_BOOT)
             {
                 str = "BOOT";
