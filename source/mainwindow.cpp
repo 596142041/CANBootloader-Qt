@@ -77,7 +77,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
 {
     QTime time;
     unsigned char current_chip_model = 0;
-    FILE_type file_type = File_None;
+    unsigned char file_type = File_None;
     time.start();
     int ret;
     Device_INFO  DEVICE_INFO;
@@ -143,14 +143,14 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         NodeAddr = ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),0)->text().toInt(NULL,16);
         if(ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),3)->text().startsWith("STM32") == true)
             {
-                current_chip_model = 1;
+                current_chip_model = STM32_SER;
                 #if DEBUG
                     qDebug()<<"当前选中芯片为ST的STM32芯片";
                 #endif
             }
         else if(ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),3)->text().startsWith("TMS320") == true)
             {
-                current_chip_model = 2;
+                current_chip_model = TMS320_SER;
                 #if DEBUG
                  qDebug()<<"当前选中芯片为TI的DSP芯片";
                 #endif
@@ -161,7 +161,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
          //判断当前选中的文件类型是否正确,同时判断文件类型,用于区分后续的发送文件的方式及其格式
          switch (current_chip_model)
          {
-             case 1:
+             case STM32_SER:
+                 {
                  //当前选中的是STM32系列芯片,烧写文件可为bin和hex文件,需要判断选中的文件类型;
                  if((ui->firmwareLineEdit->text().endsWith("bin") == false)&&\
                     (ui->firmwareLineEdit->text().endsWith("hex") == false))
@@ -195,32 +196,35 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                               );
                          return;
                      }
+                 }
                  break;
-              case 2:
-                 //当前选中的是为TI的C2000系列芯,烧写文件hex文件,需要判断选中的文件类型;
-                 if((ui->firmwareLineEdit->text().endsWith("hex") == false))
-                     {
-                         QMessageBox::warning(this,
-                                              QStringLiteral("警告"),
-                                              QStringLiteral("选中文件类型错误,当前芯片为TI的C2000系列芯片,请选hex文件")
-                                              );
-                         return;
-                     }
-                 else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
-                    {
-                         file_type = File_hex;
-#if DEBUG
-            qDebug()<<"当前芯片为TI的C2000系列芯片,文件类型为hex文件 file_type ="<<file_type;
-#endif
-                    }
-                 else
-                  {
-                      QMessageBox::warning(this,
-                                           QStringLiteral("警告"),
-                                           QStringLiteral("选中文件类型错误,当前芯片为TI的C2000系列芯片,文件类型未知")
-                                           );
-                      return;
-                  }
+              case TMS320_SER:
+                 {
+                     //当前选中的是为TI的C2000系列芯,烧写文件hex文件,需要判断选中的文件类型;
+                     if((ui->firmwareLineEdit->text().endsWith("hex") == false))
+                         {
+                             QMessageBox::warning(this,
+                                                  QStringLiteral("警告"),
+                                                  QStringLiteral("选中文件类型错误,当前芯片为TI的C2000系列芯片,请选hex文件")
+                                                  );
+                             return;
+                         }
+                     else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
+                        {
+                             file_type = File_hex;
+    #if DEBUG
+                qDebug()<<"当前芯片为TI的C2000系列芯片,文件类型为hex文件 file_type ="<<file_type;
+    #endif
+                        }
+                     else
+                        {
+                          QMessageBox::warning(this,
+                                               QStringLiteral("警告"),
+                                               QStringLiteral("选中文件类型错误,当前芯片为TI的C2000系列芯片,文件类型未知")
+                                               );
+                          return;
+                        }
+                 }
                  break;
              default:
                  QMessageBox::warning(this,
@@ -313,7 +317,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         PACK_INFO pack_info;
         SEND_INFO send_data;
         int status = CAN_SUCCESS;
-        send_data.file_type = File_None;
         send_data.pack_cnt = 0;
         int file_size = 0 ;
         char hex_buf[128];
@@ -321,7 +324,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         Data_clear((char *)send_data.data,1028);
         if(file_type == File_hex)
         {
-            send_data.file_type = file_type;
             //此处的擦除超时时间需要注意,针对STM32和DSP芯片计算不一样
             if(current_chip_model == 2)//此处是计算DSP的擦除超时时间
                 {
@@ -408,7 +410,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            ui->channelIndexComboBox->currentIndex(),
                            NodeAddr,
                            size_temp,
-                           erase_timeout_temp);
+                           erase_timeout_temp,
+                           File_hex);
             if(status != CAN_SUCCESS)
             {
                 qDebug()<<"ret = "<<ret;
@@ -432,7 +435,19 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             send_data.data_addr = 0x00;
             send_data.data_len  = 0;
             send_data.line_cnt  = 0;
-            send_data.line_num  = 16;
+            if(current_chip_model == STM32_SER)
+                {
+                     send_data.line_num  = 32;
+                }
+            else if(current_chip_model == TMS320_SER)
+                {
+                     send_data.line_num  = 16;
+                }
+            else
+                {
+                     send_data.line_num  = 16;
+                }
+
             qint64 test = 0xFF;
             ret = firmwareFile.seek(0);//移动文件指针到文件头
             if(ret == 0)
@@ -469,7 +484,18 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                        if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
                            {
                                send_data.read_start_flag = 1;
-                               send_data.line_num = 16;
+                               if(current_chip_model == STM32_SER)
+                                   {
+                                        send_data.line_num  = 32;
+                                   }
+                               else if(current_chip_model == TMS320_SER)
+                                   {
+                                        send_data.line_num  = 16;
+                                   }
+                               else
+                                   {
+                                        send_data.line_num  = 16;
+                                   }
                                send_data.line_cnt = 0;
                                send_data.data_cnt = 0;
                                send_data.data_len = 0;
@@ -614,7 +640,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         {
             file_size = 0;
             send_data.pack_size = 1024;
-            send_data.file_type = file_type;
             //此处是计算擦除超时时间
             size_temp = firmwareFile.size();
             if(size_temp <= 64*1024)
@@ -666,7 +691,8 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                        ui->channelIndexComboBox->currentIndex(),
                        NodeAddr,
                        firmwareFile.size(),
-                       erase_timeout_temp);
+                       erase_timeout_temp,
+                       File_bin);
                qDebug()<<"erase_timeout_temp = "<<erase_timeout_temp<<"firmwareFile.size() = "<<firmwareFile.size();
             if(status != CAN_SUCCESS)
             {
@@ -949,7 +975,7 @@ void MainWindow::on_Fun_test_clicked()
 #if DEBUG
     ui->progressBar->setValue(0);
 #endif
-    status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,9800);
+    status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,9800,File_hex);
     if(status == 1)
         {
 #if DEBUG
@@ -1413,14 +1439,14 @@ int MainWindow::CAN_BL_init(PCBL_CMD_LIST pCmdList)
     return CAN_SUCCESS;
 }
 
-int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut)
+int MainWindow::CAN_BL_erase(int DevIndex, int CANIndex, unsigned short NodeAddr, unsigned int FlashSize, unsigned int TimeOut, unsigned char file_type)
 {
 
     int ret;
     bootloader_data Bootloader_data ;
     int i,read_num;
     VCI_CAN_OBJ can_send_msg,can_read_msg[1000];
-    Bootloader_data.DLC = 4;
+    Bootloader_data.DLC = 5;
     Bootloader_data.ExtId.bit.cmd = cmd_list.Erase;
     Bootloader_data.ExtId.bit.addr = NodeAddr;
     Bootloader_data.ExtId.bit.reserve = 0;
@@ -1429,6 +1455,7 @@ int MainWindow::CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,u
     Bootloader_data.data[1] = ( FlashSize & 0xFF0000 ) >> 16;
     Bootloader_data.data[2] = ( FlashSize & 0xFF00 ) >> 8;
     Bootloader_data.data[3] = ( FlashSize & 0x00FF );
+    Bootloader_data.data[4] = file_type;
     VCI_ClearBuffer(4,DevIndex,CANIndex);
     can_send_msg.DataLen = Bootloader_data.DLC;
     can_send_msg.SendType = 1;
@@ -1540,20 +1567,7 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
         //0-3字节表示地址偏移 4-7表示数据包的大小
         Bootloader_data.DLC = 8;
         Bootloader_data.ExtId.bit.cmd = cmd_list.WriteInfo;
-      //  Bootloader_data.data[0] = ( send_data->data_addr & 0xFF000000 ) >> 24;
-        if(send_data->file_type == File_bin)
-            {
-                 Bootloader_data.data[0] = 0xF0|send_data->file_type;
-            }
-        else if(send_data->file_type == File_hex)
-            {
-                Bootloader_data.data[0] = 0xF0|send_data->file_type;
-            }
-        else
-            {
-                 Bootloader_data.data[0] = 0xF0|File_None;
-            }
-        //----------------------------------------------------------------------
+        Bootloader_data.data[0] = ( send_data->data_addr & 0xFF000000 )>> 0x18;
         Bootloader_data.data[1] = ( send_data->data_addr & 0x00FF0000 )>> 0x10;
         Bootloader_data.data[2] = ( send_data->data_addr & 0x0000FF00 )>> 0x08;
         Bootloader_data.data[3] = ( send_data->data_addr & 0x000000FF )>> 0x00;
@@ -1561,7 +1575,7 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
         Bootloader_data.data[4] = ( ( send_data->data_len + 2 ) & 0xFF000000 )>> 0x18;
         Bootloader_data.data[5] = ( ( send_data->data_len + 2 ) & 0x00FF0000 )>> 0x10;
         Bootloader_data.data[6] = ( ( send_data->data_len + 2 ) & 0x0000FF00 )>> 0x08;
-        Bootloader_data.data[7] = ( ( send_data->data_len + 2 ) & 0x000000FF )>>0x00;
+        Bootloader_data.data[7] = ( ( send_data->data_len + 2 ) & 0x000000FF )>> 0x00;
         can_send_msg.DataLen = Bootloader_data.DLC;
         can_send_msg.ExternFlag = Bootloader_data.IDE;
         can_send_msg.ID = Bootloader_data.ExtId.all;
