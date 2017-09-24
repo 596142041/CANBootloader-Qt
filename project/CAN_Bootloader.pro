@@ -6,7 +6,6 @@ TEMPLATE = app
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-win32:LIBS += -L$$PWD/lib/win32/ -lUSB2XXX
 win32:LIBS += -L$$PWD/lib/win32/ -lControlCAN
 //DEFINES += LANGUE_EN
 
@@ -24,8 +23,6 @@ OTHER_FILES += \
 
 HEADERS += \
     ../source/mainwindow.h \
-    ../source/usb_device.h \
-    ../source/usb2can.h \
     ../source/scandevrangedialog.h \
     ../source/ControlCAN.h
 
