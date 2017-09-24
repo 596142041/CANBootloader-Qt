@@ -365,9 +365,9 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                 }
                             else
                                 {
-                                   erase_timeout_temp = (size_temp/0xFFFF)+1;
+                                   erase_timeout_temp  = (size_temp/0xFFFF)+1;
                                 }
-                            erase_timeout_temp = 550*erase_timeout_temp;
+                            erase_timeout_temp         = 550*erase_timeout_temp;
                         }
                     else if((size_temp>64*1024)&&(size_temp<=128*1024))
                         {
@@ -381,9 +381,9 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                 }
                             else
                                 {
-                                   erase_timeout_temp = (size_temp/0x20000)+1;
+                                   erase_timeout_temp   = (size_temp/0x20000)+1;
                                 }
-                            erase_timeout_temp = 2000*erase_timeout_temp+4*550+1100;
+                            erase_timeout_temp          = 2000*erase_timeout_temp+4*550+1100;
                         }
                     else if(size_temp>850*1024)
                         {
@@ -517,11 +517,11 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                        return ;
                                    }
                                    send_data.pack_cnt++;
-                                   status = 0xFF;
-                                   send_data.data_len = 0;
-                                   send_data.data_cnt = 0;
-                                   send_data.data_addr = 0x00;
-                                   send_data.line_cnt = 0;
+                                   status               = 0xFF;
+                                   send_data.data_len   = 0;
+                                   send_data.data_cnt   = 0;
+                                   send_data.data_addr  = 0x00;
+                                   send_data.line_cnt   = 0;
                                    for(int i = 0;i < 1028;i++)
                                    {
                                        send_data.data[i] = 0x00;
@@ -541,11 +541,11 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                          return ;
                                      }
                                    send_data.pack_cnt++;
-                                   status = 0xFF;
-                                   send_data.data_len = 0;
-                                   send_data.data_cnt = 0;
+                                   status              = 0xFF;
+                                   send_data.data_len  = 0;
+                                   send_data.data_cnt  = 0;
                                    send_data.data_addr = 0x00;
-                                   send_data.line_cnt = 0;
+                                   send_data.line_cnt  = 0;
                                    for(int i = 0;i < 1028;i++)
                                    {
                                        send_data.data[i] = 0x00;
@@ -569,7 +569,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            hex_to_bin(&hex_buf[0],bin_buf,pack_info.data_len*2);//将读取的数据转换为hex;
                            if(pack_info.data_type == DATA_BASE_ADDR)
                            {
-                             pack_info.data_base_addr =bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
+                             pack_info.data_base_addr = bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
                              pack_info.data_base_addr = pack_info.data_base_addr<<16;
                            }
                            else if(pack_info.data_type == DATA_Rrecord)
@@ -592,7 +592,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                    //以下是将刚才读取的数据写入send_data.data数组中
                                    for(int i = 0;i < pack_info.data_len;i++)
                                    {
-                                       send_data.data_cnt = i;
+                                       send_data.data_cnt                   = i;
                                        send_data.data[i+send_data.data_len] = pack_info.Data[i];
                                    }
                                    send_data.data_cnt = pack_info.data_len;
@@ -652,7 +652,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 {
                    erase_timeout_temp = (size_temp/0xFFFF)+1;
                 }
-                erase_timeout_temp = 550*erase_timeout_temp;
+                erase_timeout_temp    = 550*erase_timeout_temp;
             }
             else if((size_temp>64*1024)&&(size_temp<=128*1024))
             {
@@ -841,7 +841,7 @@ void MainWindow::on_scanNodeAction_triggered()
     DEVICE_INFO.Device_addr.all = (uint32_t)0x00;
     DEVICE_INFO.FW_TYPE.all     =  (uint32_t)0x00;
     DEVICE_INFO.FW_Version      =  (uint32_t)0x00;
-    int startAddr = 0,endAddr = 0;
+    int startAddr = 0,endAddr   = 0;
     ScanDevRangeDialog *pScanDevRangeDialog = new ScanDevRangeDialog();
     if(pScanDevRangeDialog->exec() == QDialog::Accepted)
     {
@@ -1048,10 +1048,10 @@ void MainWindow::on_Fun_test_clicked()
                   if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
                       {
                           send_data.read_start_flag = 1;
-                          send_data.line_num = 16;
-                          send_data.line_cnt = 0;
-                          send_data.data_cnt = 0;
-                          send_data.data_len = 0;
+                          send_data.line_num        = 16;
+                          send_data.line_cnt        = 0;
+                          send_data.data_cnt        = 0;
+                          send_data.data_len        = 0;
                       }
                   else
                       {
@@ -1065,11 +1065,11 @@ void MainWindow::on_Fun_test_clicked()
 #endif
                                   return ;
                               }
-                              status = 0xFF;
-                              send_data.data_len = 0;
-                              send_data.data_cnt = 0;
+                              status              = 0xFF;
+                              send_data.data_len  = 0;
+                              send_data.data_cnt  = 0;
                               send_data.data_addr = 0x00;
-                              send_data.line_cnt = 0;
+                              send_data.line_cnt  = 0;
                               for(int i = 0;i < 1028;i++)
                               {
                                   send_data.data[i] = 0x00;
@@ -1086,10 +1086,10 @@ void MainWindow::on_Fun_test_clicked()
                                     return ;
                                 }
                               status = 0xFF;
-                              send_data.data_len = 0;
-                              send_data.data_cnt = 0;
+                              send_data.data_len  = 0;
+                              send_data.data_cnt  = 0;
                               send_data.data_addr = 0x00;
-                              send_data.line_cnt = 0;
+                              send_data.line_cnt  = 0;
                               for(int i = 0;i < 1028;i++)
                               {
                                   send_data.data[i] = 0x00;
@@ -1117,7 +1117,7 @@ void MainWindow::on_Fun_test_clicked()
                       hex_to_bin(&hex_buf[0],bin_buf,pack_info.data_len*2);//将读取的数据转换为hex;
                       if(pack_info.data_type == DATA_BASE_ADDR)
                       {
-                        pack_info.data_base_addr =bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
+                        pack_info.data_base_addr = bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
                         pack_info.data_base_addr = pack_info.data_base_addr<<16;
                       }
                       else if(pack_info.data_type == DATA_Rrecord)
@@ -1141,7 +1141,7 @@ void MainWindow::on_Fun_test_clicked()
                               //以下是将刚才读取的数据写入send_data.data数组中
                               for(int i = 0;i < pack_info.data_len;i++)
                               {
-                                  send_data.data_cnt = i;
+                                  send_data.data_cnt                   = i;
                                   send_data.data[i+send_data.data_len] = pack_info.Data[i];
                               }
                               send_data.data_cnt = pack_info.data_len;
@@ -1209,10 +1209,9 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     qDebug()<<"keys.size() = "<<chip_list.size();
     for (int i = 0; i < chip_list.size(); ++i)
         {
-             qDebug()<<"keys.at= "<< chip_list.at(i)<<""<<settings.value(chip_list.at(i)).toInt();   // returns 5;
+             qDebug()<<"keys.at= "<< chip_list.at(i)<<""<<settings.value(chip_list.at(i)).toInt();
         }
 #endif
-
     state = VCI_OpenDevice(4,ui->deviceIndexComboBox->currentIndex(),0);
     if(!state)
     {
@@ -1240,7 +1239,6 @@ void MainWindow::on_Connect_USB_CAN_clicked()
                                  QStringLiteral("无设备连接！")
                                  );
         }
-    CBL_CMD_LIST CMD_List;
     QString cmdStr[]={"Erase","Write","Check","Excute","WriteInfo","CmdFaild","CmdSuccess","SetBaudRate"};
     uint8_t cmdData[16];
     for(int i=0;i<ui->cmdListTableWidget->rowCount();i++)
@@ -1254,21 +1252,22 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             cmdData[i] = ui->cmdListTableWidget->item(i,1)->text().toInt(NULL,16);
         }
     }
-    CMD_List.Erase = cmdData[0];
-    CMD_List.WriteInfo = cmdData[4];
-    CMD_List.Write = cmdData[1];
-    CMD_List.Check = cmdData[2];
+    Boot_CMD_LIST CMD_List;
+    CMD_List.Erase       = cmdData[0];
+    CMD_List.Write       = cmdData[1];
+    CMD_List.Check       = cmdData[2];
+    CMD_List.Excute      = cmdData[3];
+    CMD_List.CmdFaild    = cmdData[5];
+    CMD_List.WriteInfo   = cmdData[4];
+    CMD_List.CmdSuccess  = cmdData[6];
     CMD_List.SetBaudRate = cmdData[7];
-    CMD_List.Excute = cmdData[3];
-    CMD_List.CmdSuccess = cmdData[6];
-    CMD_List.CmdFaild = cmdData[5];
-    CAN_BL_init(&CMD_List);//初始化cmd
+    CAN_BL_init(CMD_List);//初始化cmd
     VCI_INIT_CONFIG VCI_init;
-    VCI_init.AccCode = 0x00000000;
-    VCI_init.AccMask = 0xFFFFFFFF;
-    VCI_init.Filter = 1;
-    VCI_init.Mode = 0;
-    VCI_init.Reserved = 0x00;
+     VCI_init.Mode       = 0x00;
+    VCI_init.Filter      = 0x01;
+    VCI_init.AccCode     = 0x00000000;
+    VCI_init.AccMask     = 0xFFFFFFFF;
+    VCI_init.Reserved    = 0x00;
     //---------波特率处理
     QString str = ui->baudRateComboBox->currentText();
     str.resize(str.length()-4);
@@ -1314,32 +1313,29 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 void MainWindow::on_Close_CAN_clicked()
 {
     int ret;
-    if(ui->deviceIndexComboBox->currentIndex() != 2)
+    ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
+    if(ret != 1)
         {
-            ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
-            if(ret != 1)
-                {
-                    QMessageBox::warning(this,
-                                         QStringLiteral("警告"),
-                                         QStringLiteral("复位设备失败！")
-                                         );
-                }
-            else
-                {
-                     USB_CAN_status = 0;
-                }
-            ret = VCI_CloseDevice(4,ui->deviceIndexComboBox->currentIndex());
-            if(ret != 1)
-                {
-                    QMessageBox::warning(this,
-                                         QStringLiteral("警告"),
-                                         QStringLiteral("关闭设备失败！")
-                                         );
-                }
-            else
-                {
-                     USB_CAN_status = 0;
-                }
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("复位设备失败！")
+                                 );
+        }
+    else
+        {
+             USB_CAN_status = 0;
+        }
+    ret = VCI_CloseDevice(4,ui->deviceIndexComboBox->currentIndex());
+    if(ret != 1)
+        {
+            QMessageBox::warning(this,
+                                 QStringLiteral("警告"),
+                                 QStringLiteral("关闭设备失败！")
+                                 );
+        }
+    else
+        {
+             USB_CAN_status = 0;
         }
     ui->updateFirmwarePushButton->setEnabled(false);
     ui->Connect_USB_CAN->setEnabled(true);
@@ -1382,23 +1378,22 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
     {
      return CAN_ERR_USB_WRITE_FAIL;//USB写数据失败
     }
-    //QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);  //lpr 删除2017-07-13
-        //-----------------------------------------
-        //lpr 添加
-        DWORD current_time = 0;
-        DWORD new_time = 0;
-        current_time = GetTickCount();
-        unsigned char CAN_BL_Nodecheck_flag = 0;
-        while (CAN_BL_Nodecheck_flag == 0)
-            {
-                new_time = GetTickCount();
-                if(new_time-current_time>TimeOut)
-                    {
-                       CAN_BL_Nodecheck_flag = 1;
-                    }
-            }
+    //-----------------------------------------
+    //lpr 添加
+    DWORD current_time = 0;
+    DWORD new_time = 0;
+    current_time = GetTickCount();
+    unsigned char CAN_BL_Nodecheck_flag = 0;
+    while (CAN_BL_Nodecheck_flag == 0)
+        {
+            new_time = GetTickCount();
+            if(new_time-current_time>TimeOut)
+                {
+                   CAN_BL_Nodecheck_flag = 1;
+                }
+        }
         //--------------------------------------------
-        read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
+     read_num  =VCI_GetReceiveNum(4,DevIndex,CANIndex);
     if(read_num == 0)
         {
             return  CAN_BL_ERR_TIME_OUT;//超时错误
@@ -1418,7 +1413,7 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
             if(ret == 1)
             {
                 *pVersion = can_read_msg[0].Data[0]<<24|can_read_msg[0].Data[1]<<16|can_read_msg[0].Data[2]<<8|can_read_msg[0].Data[3]<<0;
-                *pType =    can_read_msg[0].Data[4]<<24|can_read_msg[0].Data[5]<<16|can_read_msg[0].Data[6]<<8|can_read_msg[0].Data[7]<<0;
+                *pType    = can_read_msg[0].Data[4]<<24|can_read_msg[0].Data[5]<<16|can_read_msg[0].Data[6]<<8|can_read_msg[0].Data[7]<<0;
             }
         }
 
@@ -1426,16 +1421,16 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
     return CAN_SUCCESS;
 }
 
-int MainWindow::CAN_BL_init(PCBL_CMD_LIST pCmdList)
+int MainWindow::CAN_BL_init(Boot_CMD_LIST pCmdList)
 {
 
-    cmd_list.Check      = pCmdList->Check;
-    cmd_list.Erase      = pCmdList->Erase;
-    cmd_list.Excute     = pCmdList->Excute;
-    cmd_list.Write      = pCmdList->Write;
-    cmd_list.WriteInfo  = pCmdList->WriteInfo;
-    cmd_list.CmdFaild   = pCmdList->CmdFaild;
-    cmd_list.CmdSuccess = pCmdList->CmdSuccess;
+    cmd_list.Check      = pCmdList.Check;
+    cmd_list.Erase      = pCmdList.Erase;
+    cmd_list.Excute     = pCmdList.Excute;
+    cmd_list.Write      = pCmdList.Write;
+    cmd_list.WriteInfo  = pCmdList.WriteInfo;
+    cmd_list.CmdFaild   = pCmdList.CmdFaild;
+    cmd_list.CmdSuccess = pCmdList.CmdSuccess;
     return CAN_SUCCESS;
 }
 
@@ -1446,22 +1441,22 @@ int MainWindow::CAN_BL_erase(int DevIndex, int CANIndex, unsigned short NodeAddr
     bootloader_data Bootloader_data ;
     int i,read_num;
     VCI_CAN_OBJ can_send_msg,can_read_msg[1000];
-    Bootloader_data.DLC = 5;
-    Bootloader_data.ExtId.bit.cmd = cmd_list.Erase;
-    Bootloader_data.ExtId.bit.addr = NodeAddr;
+    Bootloader_data.DLC               = 5;
+    Bootloader_data.ExtId.bit.cmd     = cmd_list.Erase;
+    Bootloader_data.ExtId.bit.addr    = NodeAddr;
     Bootloader_data.ExtId.bit.reserve = 0;
-    Bootloader_data.IDE = CAN_ID_EXT;
-    Bootloader_data.data[0] = ( FlashSize & 0xFF000000 ) >> 24;
-    Bootloader_data.data[1] = ( FlashSize & 0xFF0000 ) >> 16;
-    Bootloader_data.data[2] = ( FlashSize & 0xFF00 ) >> 8;
-    Bootloader_data.data[3] = ( FlashSize & 0x00FF );
-    Bootloader_data.data[4] = file_type;
-    VCI_ClearBuffer(4,DevIndex,CANIndex);
-    can_send_msg.DataLen = Bootloader_data.DLC;
-    can_send_msg.SendType = 1;
-    can_send_msg.RemoteFlag = 0;
-    can_send_msg.ExternFlag = Bootloader_data.IDE;
-    can_send_msg.ID = Bootloader_data.ExtId.all;
+    Bootloader_data.IDE               = CAN_ID_EXT;
+    Bootloader_data.data[0]           = ( FlashSize & 0xFF000000 ) >> 24;
+    Bootloader_data.data[1]           = ( FlashSize & 0xFF0000 ) >> 16;
+    Bootloader_data.data[2]           = ( FlashSize & 0xFF00 ) >> 8;
+    Bootloader_data.data[3]           = ( FlashSize & 0x00FF );
+    Bootloader_data.data[4]           = file_type;
+    can_send_msg.DataLen              = Bootloader_data.DLC;
+    can_send_msg.SendType             = 1;
+    can_send_msg.RemoteFlag           = 0;
+    can_send_msg.ExternFlag           = Bootloader_data.IDE;
+    can_send_msg.ID                   = Bootloader_data.ExtId.all;
+     VCI_ClearBuffer(4,DevIndex,CANIndex);
     for(i = 0;i<Bootloader_data.DLC;i++)
         {
             can_send_msg.Data[i] = Bootloader_data.data[i];
@@ -1471,12 +1466,9 @@ int MainWindow::CAN_BL_erase(int DevIndex, int CANIndex, unsigned short NodeAddr
     {
      return CAN_ERR_USB_WRITE_FAIL;
     }
-    //QTimer::singleShot(TimeOut, this, &MainWindow::Time_update);  //lpr 删除2017-07-13
-    //-----------------------------------------
-    //lpr 添加
-    DWORD current_time = 0;
-    DWORD new_time = 0;
-    current_time = GetTickCount();
+    DWORD current_time              = 0;
+    DWORD new_time                  = 0;
+    current_time                    = GetTickCount();
     unsigned char CAN_BL_erase_flag = 0;
     while (CAN_BL_erase_flag == 0)
         {
@@ -1516,14 +1508,8 @@ int MainWindow::CAN_BL_erase(int DevIndex, int CANIndex, unsigned short NodeAddr
             if(ret == 1)
             {
                 //判断返回结果
-                if(can_read_msg[0].ID == (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
                     {
-                        return CAN_SUCCESS;
-                        qDebug()<<"成功擦除数据";
-                    }
-                    else
-                    {
-                        qDebug()<<"数据无效";
                         return CAN_BL_ERR_CMD;
                     }
 
@@ -1538,20 +1524,17 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
 {
         unsigned short int i;
         unsigned short int  cnt = 0;
-        //lpr 添加
         DWORD current_time = 0;
         DWORD new_time = 0;
         int read_num = 0;
         bool CAN_BL_write_flag = 0;
         UINT crc_temp = 0x0000;
-      //  int CAN1_CanRxMsgFlag;
          int ret;
         bootloader_data Bootloader_data;
         //Bootloader_data部分成员进行赋值,后面的程序无需关注
         Bootloader_data.ExtId.bit.addr = NodeAddr;
         Bootloader_data.ExtId.bit.reserve = 0;
         Bootloader_data.IDE = CAN_ID_EXT;
-       // CanTxMsg TxMessage;
         VCI_CAN_OBJ can_send_msg,can_read_msg[1000];
         can_send_msg.RemoteFlag = 0;
         can_send_msg.SendType = 1;
@@ -1576,9 +1559,9 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
         Bootloader_data.data[5] = ( ( send_data->data_len + 2 ) & 0x00FF0000 )>> 0x10;
         Bootloader_data.data[6] = ( ( send_data->data_len + 2 ) & 0x0000FF00 )>> 0x08;
         Bootloader_data.data[7] = ( ( send_data->data_len + 2 ) & 0x000000FF )>> 0x00;
-        can_send_msg.DataLen = Bootloader_data.DLC;
+        can_send_msg.DataLen    = Bootloader_data.DLC;
         can_send_msg.ExternFlag = Bootloader_data.IDE;
-        can_send_msg.ID = Bootloader_data.ExtId.all;
+        can_send_msg.ID         = Bootloader_data.ExtId.all;
         for (i = 0; i < Bootloader_data.DLC; i++)
         {
              can_send_msg.Data[i] = Bootloader_data.data[i];
@@ -1626,13 +1609,8 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
                             if(ret == 1)
                             {
                                  //判断返回结果
-                                if(can_read_msg[0].ID == (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                                if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
                                     {
-
-                                    }
-                                    else
-                                    {
-                                       // qDebug()<<"数据无效";
                                         return CAN_BL_ERR_CMD;
                                     }
 
@@ -1660,15 +1638,15 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
             }
             else
             {
-                Bootloader_data.DLC = temp;
+                Bootloader_data.DLC           = temp;
                 Bootloader_data.ExtId.bit.cmd = cmd_list.Write;
                 //-------------------------------------------------------
-                 can_send_msg.DataLen = Bootloader_data.DLC;
-                 can_send_msg.ExternFlag = Bootloader_data.IDE;
-                 can_send_msg.ID = Bootloader_data.ExtId.all;
+                 can_send_msg.DataLen         = Bootloader_data.DLC;
+                 can_send_msg.ExternFlag      = Bootloader_data.IDE;
+                 can_send_msg.ID              = Bootloader_data.ExtId.all;
                 for (i = 0; i < Bootloader_data.DLC; i++)
                 {
-                    can_send_msg.Data[i] = send_data->data[cnt];
+                    can_send_msg.Data[i]      = send_data->data[cnt];
                     cnt++;
                 }
             }
@@ -1741,16 +1719,16 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
     VCI_ClearBuffer(4,DevIndex,CANIndex);
     VCI_CAN_OBJ can_send_msg;
     Bootloader_data.ExtId.bit.reserve = 0x00;
-    Bootloader_data.ExtId.bit.cmd = cmd_list.Excute;
-    Bootloader_data.ExtId.bit.addr = NodeAddr;
-    can_send_msg.DataLen = 3;
-    can_send_msg.SendType = 1;
-    can_send_msg.RemoteFlag = 0;
-    can_send_msg.ExternFlag = 1;
-    can_send_msg.ID = Bootloader_data.ExtId.all;
-    can_send_msg.Data[0] = ((Type>>16)&0x000000FF);
-    can_send_msg.Data[1] = ((Type>>8) &0x000000FF);
-    can_send_msg.Data[2] = ((Type>>0) &0x000000FF);
+    Bootloader_data.ExtId.bit.cmd     = cmd_list.Excute;
+    Bootloader_data.ExtId.bit.addr    = NodeAddr;
+    can_send_msg.DataLen              = 3;
+    can_send_msg.SendType             = 1;
+    can_send_msg.RemoteFlag           = 0;
+    can_send_msg.ExternFlag           = 1;
+    can_send_msg.ID                   = Bootloader_data.ExtId.all;
+    can_send_msg.Data[0]              = ((Type>>16)&0x000000FF);
+    can_send_msg.Data[1]              = ((Type>>8) &0x000000FF);
+    can_send_msg.Data[2]              = ((Type>>0) &0x000000FF);
     ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
     if(ret == -1)
     {
