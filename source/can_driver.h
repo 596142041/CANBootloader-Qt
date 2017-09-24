@@ -7,11 +7,6 @@
 //--以下宏定义白哦是当前设备运行的固件属性
 #define CAN_BL_BOOT     0x555555
 #define CAN_BL_APP      0xAAAAAA
-
-//----------------------以下宏定义是对芯片型号进行宏定义----------------------------
-#define TMS320F28335      1
-#define TMS320F2808       2
-#define STM32F407IGT6     3
 //---------------------------------------------------
 //--------------------
 //对hex文件解码使用的数据结构
@@ -66,13 +61,13 @@ typedef struct _PACK_INFO
     unsigned short int data_addr_offset;
     unsigned short int Data[64];
 }PACK_INFO;
-typedef enum
-{
-    File_None = 0,
-    File_bin  = 1,
-    File_hex  = 2
-}FILE_type;
-//----------------------
+//---------------------------------------
+#define File_None 0xF0
+#define File_bin  0xF1
+#define File_hex  0xF2
+#define STM32_SER   0x01
+#define TMS320_SER  0x02
+//-----------------------------------------
 typedef struct _Bootloader_data
 {
     union
@@ -104,7 +99,6 @@ typedef struct _Boot_CMD_LIST
 } Boot_CMD_LIST;
 typedef struct _SEND_INFO
 {
-    FILE_type file_type;
     unsigned short int pack_size;
     unsigned short int pack_cnt;
     unsigned char line_num;//表示读取数据的行数,最大为2;
