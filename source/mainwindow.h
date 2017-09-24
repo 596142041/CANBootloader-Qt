@@ -9,8 +9,8 @@
 #include <QModelIndex>
 #include <QTableWidgetItem>
 #include "scandevrangedialog.h"
-#include "usb_device.h"
-#include "usb2can.h"
+//#include "usb_device.h"
+//#include "usb2can.h"
 #include "ControlCAN.h"
 #include "can_driver.h"
 #include <QSettings>
@@ -79,7 +79,7 @@ private slots:
      Boot_CMD_LIST cmd_list;
      QStringList   chip_list;
     int   CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut);
-    int   CAN_BL_init(PCBL_CMD_LIST pCmdList);
+    int   CAN_BL_init(Boot_CMD_LIST pCmdList);
     int   CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);
     int   CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
     int   CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type);
