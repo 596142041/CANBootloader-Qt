@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>USB2XXX USB2CAN Bootloader</string>
+   <string>CANBootloader</string>
   </property>
   <property name="windowIcon">
    <iconset resource="image.qrc">
@@ -33,6 +33,15 @@
           </property>
           <property name="title">
            <string>节点列表</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
           </property>
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
@@ -106,8 +115,17 @@
             <height>0</height>
            </size>
           </property>
+          <property name="locale">
+           <locale language="Chinese" country="China"/>
+          </property>
           <property name="title">
            <string>命令列表</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
@@ -452,6 +470,9 @@
                </item>
                <item>
                 <widget class="QComboBox" name="channelIndexComboBox">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
                  <property name="minimumSize">
                   <size>
                    <width>80</width>
