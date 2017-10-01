@@ -24,7 +24,8 @@ OTHER_FILES += \
 HEADERS += \
     ../source/mainwindow.h \
     ../source/scandevrangedialog.h \
-    ../source/ControlCAN.h
+    ../source/ControlCAN.h \
+    ../source/can_driver.h
 
 SOURCES += \
     ../source/main.cpp \
