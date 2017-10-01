@@ -16,7 +16,7 @@
 #include <QSettings>
 #include <QDir>
 #include <QStringList>
-#define DEBUG 1
+#define DEBUG 0
 namespace Ui {
 class MainWindow;
 }
@@ -74,6 +74,7 @@ private slots:
     void on_action_Close_CAN_triggered();
 
     void on_Fun_test_clicked();
+
     private:
     Ui::MainWindow *ui;
      Boot_CMD_LIST cmd_list;

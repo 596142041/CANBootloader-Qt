@@ -47,10 +47,10 @@
 #define CAN_ERR_USB_WRITE_FAIL          (-2)  //USB写数据失败
 #define CAN_ERR_USB_READ_FAIL           (-3)  //USB读数据失败
 #define CAN_ERR_CMD_FAIL                (-4)  //命令执行失败
-#define	CAN_BL_ERR_CONFIG		(-20) //配置设备错误
-#define	CAN_BL_ERR_SEND			(-21) //发送数据出错
-#define	CAN_BL_ERR_TIME_OUT		(-22) //超时错误
-#define	CAN_BL_ERR_CMD			(-23) //执行命令失败
+#define	CAN_BL_ERR_CONFIG		        (-20) //配置设备错误
+#define	CAN_BL_ERR_SEND			        (-21) //发送数据出错
+#define	CAN_BL_ERR_TIME_OUT		        (-22) //超时错误
+#define	CAN_BL_ERR_CMD			        (-23) //执行命令失败
 
 typedef struct _PACK_INFO
 {
