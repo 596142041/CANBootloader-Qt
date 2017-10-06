@@ -9,8 +9,6 @@
 #include <QModelIndex>
 #include <QTableWidgetItem>
 #include "scandevrangedialog.h"
-//#include "usb_device.h"
-//#include "usb2can.h"
 #include "ControlCAN.h"
 #include "can_driver.h"
 #include <QSettings>
@@ -84,11 +82,11 @@ private slots:
     int   CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);
     int   CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
     int   CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type);
-    void  Data_clear(  char *data,unsigned long int len);
-    void  Data_clear_int( unsigned  short int *data,unsigned long int len);
-    unsigned char convertion(  char *hex_data);
-    void hex_to_bin(  char *hex_src,   char *bin_dst,unsigned char len);
-    unsigned short int CRCcalc16( unsigned char *data, unsigned short int len);
+    void  Data_clear(char *data,unsigned long int len);
+    void  Data_clear_int(unsigned  short int *data,unsigned long int len);
+    unsigned char convertion(char *hex_data);
+    void hex_to_bin(char *hex_src,char *bin_dst,unsigned char len);
+    unsigned short int CRCcalc16(unsigned char *data, unsigned short int len);
 };
 
 #endif // MAINWINDOW_H
