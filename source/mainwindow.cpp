@@ -82,9 +82,9 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     time.start();
     int ret;
     Device_INFO  DEVICE_INFO;
-    DEVICE_INFO.Device_addr.all = (uint32_t)0x00;
-    DEVICE_INFO.FW_TYPE.all     =  (uint32_t)0x00;
     DEVICE_INFO.FW_Version      =  (uint32_t)0x00;
+    DEVICE_INFO.FW_TYPE.all     =  (uint32_t)0x00;
+    DEVICE_INFO.Device_addr.all =  (uint32_t)0x00;
     if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
     {
         if(ui->nodeListTableWidget->rowCount()<=0)
