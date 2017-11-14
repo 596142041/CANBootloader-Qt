@@ -787,7 +787,9 @@
    <addaction name="scanNodeAction"/>
    <addaction name="contactUsAction"/>
    <addaction name="aboutAction"/>
+   <addaction name="action_Open_CAN"/>
    <addaction name="separator"/>
+   <addaction name="action_Close_CAN"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="exitAction">
