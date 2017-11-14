@@ -39,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
     ui->baudRateComboBox->setCurrentIndex(2);
+    ui->action_Open_CAN->setEnabled(true);
+    ui->action_Close_CAN->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -836,6 +838,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                              );
         return;
     }
+   firmwareFile.close();
     //执行固件
     ret = CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),NodeAddr,CAN_BL_APP);
     if(ret != CAN_SUCCESS)
@@ -1274,6 +1277,8 @@ void MainWindow::on_exitAction_triggered()
 
 void MainWindow::on_Connect_USB_CAN_clicked()
 {
+    ui->action_Open_CAN->setEnabled(false);
+    ui->action_Close_CAN->setEnabled(true);
     int ret;
     bool state;
     // QStringList   chip_list;
@@ -1388,6 +1393,8 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 
 void MainWindow::on_Close_CAN_clicked()
 {
+    ui->action_Open_CAN->setEnabled(true);
+    ui->action_Close_CAN->setEnabled(false);
     int ret;
     ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
     if(ret != 1)
@@ -1426,11 +1433,15 @@ void MainWindow::on_Close_CAN_clicked()
 void MainWindow::on_action_Open_CAN_triggered()
 {
 on_Connect_USB_CAN_clicked();
+ui->action_Open_CAN->setEnabled(false);
+ui->action_Close_CAN->setEnabled(true);
 }
 
 void MainWindow::on_action_Close_CAN_triggered()
 {
     on_Close_CAN_clicked();
+    ui->action_Open_CAN->setEnabled(true);
+    ui->action_Close_CAN->setEnabled(false);
 }
 //------------------------------------------------------------------------
 //以下函数是根据自己的CAN设备进行编写
