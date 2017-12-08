@@ -73,6 +73,8 @@ private slots:
 
     void on_Fun_test_clicked();
 
+    void on_action_savefile_triggered();
+
     private:
     Ui::MainWindow *ui;
      Boot_CMD_LIST cmd_list;
