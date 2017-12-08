@@ -1,6 +1,6 @@
 build-CAN_Bootloader-Desktop_Qt_5_8_0_MSVC2013_32bit-Debug
 build-CAN_Bootloader-Desktop_Qt_5_8_0_MinGW_32bit-Debug
-build-CAN_Bootloader-Desktop_Qt_5_8_0_MinGW_32bit-Release 
+build-CAN_Bootloader-Desktop_Qt_5_9_3_MinGW_32bit-Release
 mainwindow-0*.cpp
 CAN_Bootloader.pro.user
 mainwindow.cpp.i10184
