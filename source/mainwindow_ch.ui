@@ -751,6 +751,7 @@
     <addaction name="exitAction"/>
     <addaction name="action_Open_CAN"/>
     <addaction name="action_Close_CAN"/>
+    <addaction name="action_savefile"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -784,12 +785,13 @@
     <bool>false</bool>
    </attribute>
    <addaction name="openFirmwareFileAction"/>
+   <addaction name="action_savefile"/>
    <addaction name="scanNodeAction"/>
-   <addaction name="contactUsAction"/>
-   <addaction name="aboutAction"/>
    <addaction name="action_Open_CAN"/>
    <addaction name="separator"/>
    <addaction name="action_Close_CAN"/>
+   <addaction name="contactUsAction"/>
+   <addaction name="aboutAction"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="exitAction">
@@ -861,6 +863,18 @@
    </property>
    <property name="text">
     <string>断开</string>
+   </property>
+  </action>
+  <action name="action_savefile">
+   <property name="icon">
+    <iconset resource="image.qrc">
+     <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
+   </property>
+   <property name="text">
+    <string>保存文件</string>
+   </property>
+   <property name="toolTip">
+    <string>savefile</string>
    </property>
   </action>
  </widget>
