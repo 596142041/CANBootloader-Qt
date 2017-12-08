@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->baudRateComboBox->setCurrentIndex(2);
     ui->action_Open_CAN->setEnabled(true);
     ui->action_Close_CAN->setEnabled(false);
+    ui->scanNodeAction->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -1277,11 +1278,8 @@ void MainWindow::on_exitAction_triggered()
 
 void MainWindow::on_Connect_USB_CAN_clicked()
 {
-    ui->action_Open_CAN->setEnabled(false);
-    ui->action_Close_CAN->setEnabled(true);
     int ret;
     bool state;
-    // QStringList   chip_list;
     QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini"; ;
     QSettings settings(file_path, QSettings::IniFormat);
     settings.beginGroup("chip");
@@ -1389,12 +1387,16 @@ void MainWindow::on_Connect_USB_CAN_clicked()
              USB_CAN_status = 0x04;
              VCI_ClearBuffer(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
         }
+    ui->action_Open_CAN->setEnabled(false);
+    ui->action_Close_CAN->setEnabled(true);
+    ui->scanNodeAction->setEnabled(true);
 }
 
 void MainWindow::on_Close_CAN_clicked()
 {
     ui->action_Open_CAN->setEnabled(true);
     ui->action_Close_CAN->setEnabled(false);
+    ui->scanNodeAction->setEnabled(false);
     int ret;
     ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
     if(ret != 1)
@@ -1435,6 +1437,9 @@ void MainWindow::on_action_Open_CAN_triggered()
 on_Connect_USB_CAN_clicked();
 ui->action_Open_CAN->setEnabled(false);
 ui->action_Close_CAN->setEnabled(true);
+ui->action_Open_CAN->setEnabled(false);
+ui->action_Close_CAN->setEnabled(true);
+ui->scanNodeAction->setEnabled(true);
 }
 
 void MainWindow::on_action_Close_CAN_triggered()
@@ -1442,6 +1447,7 @@ void MainWindow::on_action_Close_CAN_triggered()
     on_Close_CAN_clicked();
     ui->action_Open_CAN->setEnabled(true);
     ui->action_Close_CAN->setEnabled(false);
+    ui->scanNodeAction->setEnabled(false);
 }
 //------------------------------------------------------------------------
 //以下函数是根据自己的CAN设备进行编写
@@ -1543,7 +1549,7 @@ int MainWindow::CAN_BL_erase(int DevIndex, int CANIndex, unsigned short NodeAddr
     can_send_msg.RemoteFlag           = 0;
     can_send_msg.ExternFlag           = Bootloader_data.IDE;
     can_send_msg.ID                   = Bootloader_data.ExtId.all;
-     VCI_ClearBuffer(4,DevIndex,CANIndex);
+    VCI_ClearBuffer(4,DevIndex,CANIndex);
     for(i = 0;i<Bootloader_data.DLC;i++)
         {
             can_send_msg.Data[i] = Bootloader_data.data[i];
@@ -1625,6 +1631,7 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
         VCI_CAN_OBJ can_send_msg,can_read_msg[1000];
         can_send_msg.RemoteFlag = 0;
         can_send_msg.SendType = 1;
+        //此处避免发生奇数个数据导致芯片写入数据错误
         if(send_data->data_len%2 !=0)
             {
                 send_data->data[send_data->data_len] = 0xFF;
@@ -1742,7 +1749,6 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
                     cnt++;
                 }
             }
-            //CAN_WriteData(&TxMessage);//发送数据
             ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
             if(ret == -1)
             {
@@ -1764,7 +1770,6 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
                        CAN_BL_write_flag = 1;
                     }
             }
-
         //读取设备反馈数据
          if(CAN_BL_write_flag == 1)
            {
@@ -1831,6 +1836,7 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
 }
 //-----------------------------------------------------------------------------------
 //以下代码均为对hex文件解码需要的代码
+//对hex解码的方式目前是根据自己的想法进行写的,后续可参考其他的方式
 void MainWindow::Data_clear_int(  unsigned short  int *data,unsigned long int len)
     {
         unsigned long int i;
@@ -1895,3 +1901,23 @@ unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short in
      return crc_res;
 }
 
+
+void MainWindow::on_action_savefile_triggered()
+{
+        QString fileName;
+        fileName = QFileDialog::getSaveFileName(this,
+                                                tr("保存文件"),
+                                                "",
+                                                tr("Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*);;文本文档(*.txt)")
+                                                );
+        qDebug()<<"on_action_savefile_triggered "<<fileName;
+
+        if (!fileName.isNull())
+        {
+                            //fileName是文件名
+        }
+        else
+        {
+
+        }
+}
