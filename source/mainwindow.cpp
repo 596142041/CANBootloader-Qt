@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->cmdListTableWidget->setRowHeight(i,35);
     }
     //检测是否有CAN连接
+
     ret = VCI_FindUsbDevice(&vci);
     if(ret <= 0)
     {
@@ -328,6 +329,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         Data_clear((char *)send_data.data,1028);
         if(file_type == File_hex)
         {
+            unsigned short int line_addr_old = 0;//记录上一行的地址偏移
+            unsigned short int line_addr_diff = 0;//计算两行地址的误差是否满足条件
+            unsigned short int line_len_old = 0;
+            unsigned short int line_data_type_old = DATA_BASE_ADDR;
             //此处的擦除超时时间需要注意,针对STM32和DSP芯片计算不一样
             if(current_chip_model == 2)//此处是计算DSP的擦除超时时间
                 {
@@ -439,17 +444,15 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             send_data.data_addr = 0x00;
             send_data.data_len  = 0;
             send_data.line_cnt  = 0;
-            if(current_chip_model == STM32_SER)
+            switch (current_chip_model)
                 {
-                     send_data.line_num  = 32;
-                }
-            else if(current_chip_model == TMS320_SER)
-                {
-                     send_data.line_num  = 32;
-                }
-            else
-                {
+                case STM32_SER:
+                case TMS320_SER:
+                    send_data.line_num  = 32;
+                    break;
+                default:
                      send_data.line_num  = 16;
+                    break;
                 }
 #if DEBUG
             qint64 test = 0xFF;
@@ -462,7 +465,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 #endif
                 return;
             }
-            while(file_size <firmwareFile.size())//file_size
+            while(file_size <firmwareFile.size())
              {
                  firmwareFile.readLine((char*)hex_buf,10);
                  if(hex_buf[0] == ':')//表示是起始标志,判断刚才读取的数据中的第一个字节是否是起始标志
@@ -489,17 +492,15 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                        if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
                            {
                                send_data.read_start_flag = 1;
-                               if(current_chip_model == STM32_SER)
+                               switch (current_chip_model)
                                    {
-                                        send_data.line_num  = 32;
-                                   }
-                               else if(current_chip_model == TMS320_SER)
-                                   {
-                                        send_data.line_num  = 32;
-                                   }
-                               else
-                                   {
+                                   case STM32_SER:
+                                   case TMS320_SER:
+                                       send_data.line_num  = 32;
+                                       break;
+                                   default:
                                         send_data.line_num  = 16;
+                                       break;
                                    }
                                send_data.line_cnt = 0;
                                send_data.data_cnt = 0;
@@ -540,10 +541,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                    }
                                    send_data.pack_cnt++;
                                    status               = 0xFF;
-                                   send_data.data_len   = 0;
-                                   send_data.data_cnt   = 0;
+                                   send_data.data_len   = 0x00;
+                                   send_data.data_cnt   = 0x00;
                                    send_data.data_addr  = 0x00;
-                                   send_data.line_cnt   = 0;
+                                   send_data.line_cnt   = 0x00;
                                    for(int i = 0;i < 1028;i++)
                                    {
                                        send_data.data[i] = 0x00;
@@ -581,10 +582,10 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                      }
                                    send_data.pack_cnt++;
                                    status              = 0xFF;
-                                   send_data.data_len  = 0;
-                                   send_data.data_cnt  = 0;
+                                   send_data.data_len  = 0x00;
+                                   send_data.data_cnt  = 0x00;
                                    send_data.data_addr = 0x00;
-                                   send_data.line_cnt  = 0;
+                                   send_data.line_cnt  = 0x00;
                                    for(int i = 0;i < 1028;i++)
                                    {
                                        send_data.data[i] = 0x00;
