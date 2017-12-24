@@ -56,6 +56,7 @@ typedef struct _PACK_INFO
 {
     unsigned char      data_type;//
     unsigned short int data_len;
+    unsigned short int data_cnt;
     unsigned long  int data_addr;
     unsigned long  int data_base_addr;
     unsigned short int data_addr_offset;
@@ -84,6 +85,7 @@ typedef struct _Bootloader_data
     unsigned char DLC;  //数据长度，可为0到8;
     unsigned char data[8];
 }  bootloader_data;
+//定义CAN Bootloader命令列表
 typedef struct _Boot_CMD_LIST
 {
     //Bootloader相关命令
@@ -99,15 +101,15 @@ typedef struct _Boot_CMD_LIST
 } Boot_CMD_LIST;
 typedef struct _SEND_INFO
 {
-    unsigned short int pack_size;//表示每个每次读取bin文件的长度,仅仅是在读取bin文件时使用
-    unsigned short int pack_cnt;//表示当前已经发送的数据包的个数,仅仅是测试使用.
-    unsigned char line_num;//表示读取数据的行数,最大为2;
-    unsigned char line_cnt;//表示读取文件的函数,最大值不能大于line_num
-    unsigned char read_start_flag;//表示开始读取数据标志位
-    unsigned long int data_addr;//表示当前数据的写入地址对于hex文件表示实际的地址,对于bin文件是表示偏移地址
     unsigned char data[1028];//缓存数据
-    unsigned short int data_cnt;//表示需要发送多少数据,最大值为66
+    unsigned char line_num;//表示读取数据的行数,最大为2;
+    unsigned char read_start_flag;//表示开始读取数据标志位
+    unsigned char line_cnt;//表示读取文件的函数,最大值不能大于line_num
     unsigned short int data_len;//表示需要发送的数据长度;
+    unsigned short int data_cnt;//表示需要发送多少数据,最大值为66
+    unsigned short int pack_cnt;//表示当前已经发送的数据包的个数,仅仅是测试使用.
+    unsigned short int pack_size;//表示每个每次读取bin文件的长度,仅仅是在读取bin文件时使用
+    unsigned long int data_addr;//表示当前数据的写入地址对于hex文件表示实际的地址,对于bin文件是表示偏移地址
 }SEND_INFO;
 typedef struct _Device_INFO
 {
@@ -131,17 +133,4 @@ typedef struct _Device_INFO
         }FW_TYPE;
         unsigned   int FW_Version;//固件版本
 }Device_INFO;
-//5.定义CAN Bootloader命令列表
-typedef  struct  _CBL_CMD_LIST{
-    //Bootloader相关命令
-        unsigned char   Erase;			//擦出APP储存扇区数据
-        unsigned char   WriteInfo;		//设置多字节写数据相关参数（写起始地址，数据量）
-    unsigned char	Write;	        //以多字节形式写数据
-        unsigned char	Check;		    //检测节点是否在线，同时返回固件信息
-    unsigned char	SetBaudRate;	//设置节点波特率
-    unsigned char	Excute;			//执行固件
-    //节点返回状态
-        unsigned char	CmdSuccess;		//命令执行成功
-        unsigned char	CmdFaild;		//命令执行失败
-} CBL_CMD_LIST,*PCBL_CMD_LIST;
 #endif // CAN_DRIVER_H
