@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow_ch.h"
 #include <QDebug>
+#include "qdebug.h"
+#define DEBUG 1
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -35,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //初始化部分按钮的状态
     ui->Close_CAN->setEnabled(false);
     ui->Connect_USB_CAN->setEnabled(true);
-    ui->Fun_test->setEnabled(true);
+    ui->Fun_test->setEnabled(false);
     ui->updateFirmwarePushButton->setEnabled(false);
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
@@ -52,7 +54,8 @@ MainWindow::~MainWindow()
 void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
     QString fileName;
-    fileName=QFileDialog::getOpenFileName(this,tr("Open files"),"","Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)");
+    QString file_path = ui->firmwareLineEdit->text();
+    fileName=QFileDialog::getOpenFileName(this,tr("Open files"),file_path,"Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)");
     if(fileName.isNull())
     {
         return;
@@ -70,7 +73,7 @@ int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
     for(int i=0;i<27;i++)
     {
         if(BaudRate == CANBus_Baudrate_table[i].BaudRate)
-        {
+         {
             return i;
         }
     }
@@ -80,7 +83,7 @@ int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
 void MainWindow::on_updateFirmwarePushButton_clicked()
 {
     QTime time;
-     QString warning_str;
+    QString warning_str;
     unsigned char current_chip_model = 0;
     unsigned char file_type          = File_None;
     time.start();
@@ -166,11 +169,9 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
          //判断当前选中的文件类型是否正确,同时判断文件类型,用于区分后续的发送文件的方式及其格式
          switch (current_chip_model)
          {
-             case STM32_SER:
+             case STM32_SER: //当前选中的是STM32系列芯片,烧写文件可为bin和hex文件,需要判断选中的文件类型;
                  {
-                 //当前选中的是STM32系列芯片,烧写文件可为bin和hex文件,需要判断选中的文件类型;
-                 if((ui->firmwareLineEdit->text().endsWith("bin") == false)&&\
-                    (ui->firmwareLineEdit->text().endsWith("hex") == false))
+                 if((ui->firmwareLineEdit->text().endsWith("bin") == false)&&(ui->firmwareLineEdit->text().endsWith("hex") == false))
                      {
                          QMessageBox::warning(this,
                                               QStringLiteral("警告"),
@@ -184,7 +185,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
 #if DEBUG
             qDebug()<<"当前芯片为STM32系列芯片,文件类型为bin文件 file_type = "<<file_type;
 #endif
-
                      }
                   else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
                      {
@@ -271,9 +271,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             return;
         }
     }
-    /***********************************************************************************************
-    *此处是准备发送数据给下位机
-    ***********************************************************************************************/
+    //此处是准备发送数据给下位机
     QFile firmwareFile(ui->firmwareLineEdit->text());
     if (firmwareFile.open(QFile::ReadOnly))
     {
@@ -320,96 +318,100 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         unsigned int erase_timeout_temp = 0;
         qint64 size_temp = 0;
         PACK_INFO pack_info;
+        pack_info.data_cnt = 0;
         SEND_INFO send_data;
         int status         = CAN_SUCCESS;
         send_data.pack_cnt = 0;
-        int file_size      = 0 ;
+        int  file_size     = 0;
         char hex_buf[128];
         char bin_buf[1028];
         Data_clear((char *)send_data.data,1028);
         if(file_type == File_hex)
         {
-            unsigned short int line_addr_old = 0;//记录上一行的地址偏移
-            unsigned short int line_addr_diff = 0;//计算两行地址的误差是否满足条件
-            unsigned short int line_len_old = 0;
-            unsigned short int line_data_type_old = DATA_BASE_ADDR;
             //此处的擦除超时时间需要注意,针对STM32和DSP芯片计算不一样
-            if(current_chip_model == 2)//此处是计算DSP的擦除超时时间
+            switch (current_chip_model)
                 {
-                    erase_timeout_temp = firmwareFile.size()/0x10000;
-                    if(firmwareFile.size()%0x10000 != 0)
-                        {
-                           erase_timeout_temp = erase_timeout_temp+1;
-                        }
-                    else
-                        {
-                            erase_timeout_temp = erase_timeout_temp;
-                        }
-                    if(erase_timeout_temp >5||erase_timeout_temp == 5)
-                        {
-                            erase_timeout_temp = 5;
-                        }
-                    erase_timeout_temp = erase_timeout_temp*2000;
-                    size_temp = firmwareFile.size();
-                }
-            else if(current_chip_model == 1)//此处是计算STM32擦除超时时间
-                {
-                    unsigned long int line_cnt_temp = 0;
-                    size_temp = firmwareFile.size()-28;//减掉文件头和文件尾的数据长度
-                    line_cnt_temp = size_temp%45;//此处计算hex有多少行
-                    if(line_cnt_temp == 0)
-                        {
-                            line_cnt_temp = ( unsigned long int)(size_temp/45)+1;
-                        }
-                    else if(line_cnt_temp != 0)
-                        {
-                             line_cnt_temp = ( unsigned long int)(size_temp/45)+2;
-                        }
-                    size_temp = line_cnt_temp*16;//近似计算hex真实的文件长度
-                    if(size_temp <= 64*1024)
-                        {
-                            if(size_temp%0xFFFF == 0)
-                                {
-                                    erase_timeout_temp = size_temp/0xFFFF;
-                                }
-                            else
-                                {
-                                   erase_timeout_temp  = (size_temp/0xFFFF)+1;
-                                }
-                            erase_timeout_temp         = 550*erase_timeout_temp;
-                        }
-                    else if((size_temp>64*1024)&&(size_temp<=128*1024))
-                        {
-                            erase_timeout_temp =4*550+1100;//都表示超时时间为毫秒
-                        }
-                    else if((size_temp>128*1024)&&(size_temp<=850*1024))
-                        {
-                            if((size_temp-128*1024)%0x20000 == 0)
-                                {
-                                    erase_timeout_temp = size_temp/0x20000;
-                                }
-                            else
-                                {
-                                   erase_timeout_temp   = (size_temp/0x20000)+1;
-                                }
-                            erase_timeout_temp          = 2000*erase_timeout_temp+4*550+1100;
-                        }
-                    else if(size_temp>850*1024)
-                        {
-                            QMessageBox::warning(this,
-                                                 QStringLiteral("警告"),
-                                                 QStringLiteral("文件过大,超过1M")
-                                                 );
-                            return;
-                        }
-                    else
-                        {
-                            QMessageBox::warning(this,
-                                                 QStringLiteral("警告"),
-                                                 QStringLiteral("文件大小未知")
-                                                 );
-                            return;
-                        }
+                case TMS320_SER://此处是计算DSP的擦除超时时间
+                    {
+                        erase_timeout_temp = firmwareFile.size()/0x10000;
+                        if(firmwareFile.size()%0x10000 != 0)
+                            {
+                               erase_timeout_temp = erase_timeout_temp+1;
+                            }
+                        else
+                            {
+                                erase_timeout_temp = erase_timeout_temp;
+                            }
+                        if(erase_timeout_temp >5||erase_timeout_temp == 5)
+                            {
+                                erase_timeout_temp = 5;
+                            }
+                        erase_timeout_temp = erase_timeout_temp*2000;
+                        size_temp = firmwareFile.size();
+                    }
+                    break;
+                case STM32_SER://此处是计算STM32擦除超时时间
+                    {
+                        unsigned long int line_cnt_temp = 0;
+                        size_temp = firmwareFile.size()-28;//减掉文件头和文件尾的数据长度
+                        line_cnt_temp = size_temp%45;//此处计算hex有多少行
+                        if(line_cnt_temp == 0)
+                            {
+                                line_cnt_temp = ( unsigned long int)(size_temp/45)+1;
+                            }
+                        else if(line_cnt_temp != 0)
+                            {
+                                 line_cnt_temp = ( unsigned long int)(size_temp/45)+2;
+                            }
+                        size_temp = line_cnt_temp*16;//近似计算hex真实的文件长度
+                        if(size_temp <= 64*1024)
+                            {
+                                if(size_temp%0xFFFF == 0)
+                                    {
+                                        erase_timeout_temp = size_temp/0xFFFF;
+                                    }
+                                else
+                                    {
+                                       erase_timeout_temp  = (size_temp/0xFFFF)+1;
+                                    }
+                                erase_timeout_temp         = 550*erase_timeout_temp;
+                            }
+                        else if((size_temp>64*1024)&&(size_temp<=128*1024))
+                            {
+                                erase_timeout_temp =4*550+1100;//都表示超时时间为毫秒
+                            }
+                        else if((size_temp>128*1024)&&(size_temp<=850*1024))
+                            {
+                                if((size_temp-128*1024)%0x20000 == 0)
+                                    {
+                                        erase_timeout_temp = size_temp/0x20000;
+                                    }
+                                else
+                                    {
+                                       erase_timeout_temp   = (size_temp/0x20000)+1;
+                                    }
+                                erase_timeout_temp          = 2000*erase_timeout_temp+4*550+1100;
+                            }
+                        else if(size_temp>850*1024)
+                            {
+                                QMessageBox::warning(this,
+                                                     QStringLiteral("警告"),
+                                                     QStringLiteral("文件过大,超过1M")
+                                                     );
+                                return;
+                            }
+                        else
+                            {
+                                QMessageBox::warning(this,
+                                                     QStringLiteral("警告"),
+                                                     QStringLiteral("文件大小未知")
+                                                     );
+                                return;
+                            }
+                    }
+                    break;
+                default:
+                    break;
                 }
             //超时时间计算结束
 #if DEBUG
@@ -437,7 +439,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             writeDataProcess.setModal(true);
             writeDataProcess.show();
             QCoreApplication::processEvents(QEventLoop::AllEvents);
-        //--------------------------------------------------------//
             writeDataProcess.setValue(0);
             send_data.read_start_flag = 0;
             send_data.data_cnt  = 0;
@@ -465,8 +466,18 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 #endif
                 return;
             }
+            unsigned short int line_addr_old = 0;//记录上一行的地址偏移
+            unsigned short int line_addr_diff = 0;//计算两行地址的误差是否满足条件
+            unsigned short int line_len_old = 0;//上一行中的数据长度
+            unsigned short int line_data_type_old = DATA_BASE_ADDR;//上一行数据类型
+#if DEBUG
+            unsigned long  int read_line_cnt  = 0;
+#endif
             while(file_size <firmwareFile.size())
              {
+#if DEBUG
+             read_line_cnt = read_line_cnt+1;//行数记录仅仅调试使用
+#endif
                  firmwareFile.readLine((char*)hex_buf,10);
                  if(hex_buf[0] == ':')//表示是起始标志,判断刚才读取的数据中的第一个字节是否是起始标志
                      {
@@ -488,7 +499,6 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                break;
                            }
                         #endif
-                       //---------------------------------------------------------
                        if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
                            {
                                send_data.read_start_flag = 1;
@@ -517,7 +527,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                                         90);
                                    if(status != 0x00)
                                    {
-                                           warning_str.sprintf("故障代码是%d",status);
+                                       warning_str.sprintf("故障代码是%d",status);
                                        switch(status)
                                        {
                                            case CAN_ERR_NOT_SUPPORT:    warning_str = warning_str+"适配器不支持该函数";break;
@@ -601,6 +611,21 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            {
                                pack_info.data_addr_offset = 0x0000;
                            }
+                           if(line_data_type_old != DATA_BASE_ADDR||pack_info.data_type !=DATA_BASE_ADDR)
+                               {
+                                   switch (current_chip_model)
+                                       {
+                                       case TMS320_SER:
+                                           line_addr_diff =  (pack_info.data_addr_offset-line_addr_old)*2;//计算DSP的两行之间的数据长度差
+                                           break;
+                                       case STM32_SER:
+                                           line_addr_diff =  pack_info.data_addr_offset-line_addr_old;//计算STM32系列的长度差
+                                           break;
+                                       default:
+                                           break;
+                                       }
+
+                               }
                            Data_clear(hex_buf,128);
                            firmwareFile.readLine((char*)hex_buf,(pack_info.data_len*2+3+1));
                             #if DEBUG
@@ -614,14 +639,81 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            }
                            else if(pack_info.data_type == DATA_Rrecord)
                            {
-                                 pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
-                                 for( int i = 0;i <pack_info.data_len;i++)
-                                 {
-                                    pack_info.Data[i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
-                                    #if DEBUG
-                                     qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
-                                    #endif
-                                 }
+                                if(line_data_type_old != DATA_BASE_ADDR)
+                                    {
+                                        if(line_addr_diff == line_len_old)
+                                         {
+
+                                             pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
+                                             for( int i = 0;i <pack_info.data_len;i++)
+                                             {
+                                                pack_info.Data[i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
+                                                pack_info.data_cnt++;
+                                                #if DEBUG
+                                                 qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
+                                                #endif
+                                             }
+                                         }
+                                         else
+                                         {
+                                             int diff = line_addr_diff-line_len_old;
+                                             if(diff != 0)
+                                                 {
+                                                  qDebug("line_addr_diff = 0x%x,line_len_old = 0x%x,diff = 0x%x,pack_info.data_addr_offset = 0x%X",
+                                                          line_addr_diff,
+                                                          line_len_old,
+                                                          diff,
+                                                          pack_info.data_addr_offset
+                                                         );
+                                                 }
+                                             switch (current_chip_model)
+                                             {
+                                               case TMS320_SER:
+                                                 pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset-(diff>>1);//表示该行数据应该写入的真实地址
+                                                 break;
+                                               case STM32_SER:
+                                                  pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地
+                                                 break;
+                                               default:
+                                                 break;
+                                             }
+                                              qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+                                             for(int i = 0;i<diff;i++)
+                                                 {
+                                                     pack_info.Data[i] = 0xFF;
+                                                     pack_info.data_cnt++;
+                                                 }
+                                              qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+                                             for( int i = 0;i <pack_info.data_len;i++)
+                                             {
+                                                pack_info.Data[diff+i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
+                                                 pack_info.data_cnt++;
+                                                #if DEBUG
+                                                 qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
+                                                #endif
+                                             }
+                                              qDebug("pack_info.data_cnt = %d,diff = %d",pack_info.data_cnt,diff);
+                                             for(int i=0;i<pack_info.data_cnt;i++)
+                                                 {
+                                                     qDebug(" pack_info.Data[%d] = 0x%02X",i,pack_info.Data[i]);
+                                                 }
+                                              qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+                                         }
+                                    }
+                                else
+                                    {
+                                        pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
+                                     //   for( int i = 0;i <(pack_info.data_cnt);i++)
+                                        for( int i = 0;i <(pack_info.data_len);i++)
+                                        {
+                                           pack_info.Data[i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
+                                           #if DEBUG
+                                             qDebug("pack_info.Data[%d] = 0x%02X ",i,pack_info.Data[i]);
+                                           #endif
+                                        }
+                                        pack_info.data_cnt = pack_info.data_len;
+                                    }
+
                           }
                            if(pack_info.data_type == DATA_Rrecord)
                                {
@@ -630,18 +722,29 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                        send_data.data_addr = pack_info.data_addr;//将第一行的数据地址作为该数据包的写入地址
                                    }
                                    //以下是将刚才读取的数据写入send_data.data数组中
-                                   for(int i = 0;i < pack_info.data_len;i++)
+#if DEBUG
+                                     qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+#endif
+                                   for(int i = 0;i <(pack_info.data_cnt);i++)
                                    {
                                        send_data.data_cnt                   = i;
                                        send_data.data[i+send_data.data_len] = pack_info.Data[i];
                                    }
-                                   send_data.data_cnt = pack_info.data_len;
+                                   send_data.data_cnt = pack_info.data_cnt;
                                    send_data.data_len = send_data.data_len+send_data.data_cnt;
                                    send_data.line_cnt++;
                                }
                          Data_clear(hex_buf,128);
                          Data_clear(bin_buf,1028);
                          Data_clear_int(&pack_info.Data[0],64);
+                         pack_info.data_cnt = 0;
+                         line_addr_old = pack_info.data_addr_offset;
+                         line_data_type_old = pack_info.data_type;
+                         line_len_old = pack_info.data_len;
+                         qDebug("line_addr_old = 0x%X,line_data_type_old = 0x%x,line_len_old = 0x%x\r",
+                                line_addr_old,
+                                line_data_type_old,
+                                line_len_old);
                          #if DEBUG
                             test = firmwareFile.pos();
                             qDebug() << "test = "<<test;
@@ -1450,8 +1553,7 @@ void MainWindow::on_action_Close_CAN_triggered()
     ui->action_Close_CAN->setEnabled(false);
     ui->scanNodeAction->setEnabled(false);
 }
-//------------------------------------------------------------------------
-//以下函数是根据自己的CAN设备进行编写
+/*------------------以下函数是根据自己的CAN设备进行编写--------------------------------------------*/
 int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut)
 {
     int ret = 0;
@@ -1835,18 +1937,19 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
     VCI_ClearBuffer(4,DevIndex,CANIndex);
     return CAN_SUCCESS;
 }
-//-----------------------------------------------------------------------------------
-//以下代码均为对hex文件解码需要的代码
-//对hex解码的方式目前是根据自己的想法进行写的,后续可参考其他的方式
+/**********************************************************************************
+ * 以下代码均为对hex文件解码需要的代码
+ * 对hex解码的方式目前是根据自己的想法进行写的,后续可参考其他的方式
+**********************************************************************************/
 void MainWindow::Data_clear_int(  unsigned short  int *data,unsigned long int len)
+{
+    unsigned long int i;
+    for(i = 0;i < len;i++)
     {
-        unsigned long int i;
-        for(i = 0;i < len;i++)
-        {
-            *data = 0;
-            data++;
-        }
+        *data = 0;
+        data++;
     }
+}
 
 void MainWindow::Data_clear(  char *data,unsigned long int len)
 {
@@ -1901,8 +2004,6 @@ unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short in
      }
      return crc_res;
 }
-
-
 void MainWindow::on_action_savefile_triggered()
 {
         QString fileName;
@@ -1922,3 +2023,4 @@ void MainWindow::on_action_savefile_triggered()
 
         }
 }
+
