@@ -14,7 +14,7 @@
 #include <QSettings>
 #include <QDir>
 #include <QStringList>
-#define DEBUG 0
+
 namespace Ui {
 class MainWindow;
 }
@@ -74,6 +74,7 @@ private slots:
     void on_Fun_test_clicked();
 
     void on_action_savefile_triggered();
+
 
     private:
     Ui::MainWindow *ui;
