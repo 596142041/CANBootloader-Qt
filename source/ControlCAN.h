@@ -9,16 +9,11 @@
 #define VCI_USBCAN1		3
 #define VCI_USBCAN2		4
 #define VCI_USBCAN2A		4
-
 #define VCI_USBCAN_E_U 		20
 #define VCI_USBCAN_2E_U 	21
-
-
-
 //函数调用返回状态值
 #define	STATUS_OK					1
 #define STATUS_ERR					0
-//-------------	zzzzzZzzzzz
 /*------------------------------------------------兼容ZLG的函数及数据类型------------------------------------------------*/
 //1.ZLGCAN系列接口卡信息的数据类型。
 typedef  struct  _VCI_BOARD_INFO{
