@@ -65,8 +65,6 @@ private slots:
 
     void on_Close_CAN_clicked();
 
-    void on_Connect_USB_CAN_clicked(bool checked);
-
     void on_action_Open_CAN_triggered();
 
     void on_action_Close_CAN_triggered();
@@ -75,16 +73,15 @@ private slots:
 
     void on_action_savefile_triggered();
 
-
     private:
     Ui::MainWindow *ui;
-     Boot_CMD_LIST cmd_list;
-     QStringList   chip_list;
-    int   CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut);
-    int   CAN_BL_init(Boot_CMD_LIST pCmdList);
-    int   CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);
-    int   CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
-    int   CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type);
+    Boot_CMD_LIST cmd_list;
+    QStringList   chip_list;
+    int CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int      TimeOut);
+    int CAN_BL_init(Boot_CMD_LIST pCmdList);
+    int CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);
+    int CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
+    int CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type);
     void  Data_clear(char *data,unsigned long int len);
     void  Data_clear_int(unsigned  short int *data,unsigned long int len);
     unsigned char convertion(char *hex_data);
