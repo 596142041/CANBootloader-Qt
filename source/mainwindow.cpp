@@ -2,13 +2,17 @@
 #include "ui_mainwindow_ch.h"
 #include <QDebug>
 #include "qdebug.h"
-#define DEBUG 1
+#define DEBUG 0 //调试
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-   int ret;
+#ifndef VCI_PCI5121 //此处主要是为了兼容公司使用的CAN和自用的USB_CAN
+    int ret = 0;
     VCI_BOARD_INFO1 vci;
+#else
+    int ret = 9;
+#endif
     ui->setupUi(this);
     ui->cmdListTableWidget->setColumnWidth(0,180);
     ui->cmdListTableWidget->setColumnWidth(1,180);
@@ -20,9 +24,11 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         ui->cmdListTableWidget->setRowHeight(i,35);
     }
-    //检测是否有CAN连接
 
-    ret = VCI_FindUsbDevice(&vci);
+#ifndef VCI_PCI5121
+    //检测是否有CAN连接
+    ret = VCI_FindUsbDevice(&vci);//自用的CAN可以检测有几个CAN设备连接
+#endif
     if(ret <= 0)
     {
         USB_CAN_status = 1;
@@ -51,6 +57,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
 void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
     QString fileName;
@@ -62,7 +69,7 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
     }
     ui->firmwareLineEdit->setText(fileName);
 #if DEBUG
-    qDebug()<<"uui->nodeListTableWidget->rowCount() = "<<ui->nodeListTableWidget->rowCount();
+    qDebug()<<"ui->nodeListTableWidget->rowCount() = "<<ui->nodeListTableWidget->rowCount();
     qDebug()<<"ui->nodeListTableWidget->columnCount() = "<<ui->nodeListTableWidget->currentColumn();
 #endif
 }
@@ -657,6 +664,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                          else
                                          {
                                              int diff = line_addr_diff-line_len_old;
+#if DEBUG
                                              if(diff != 0)
                                                  {
                                                   qDebug("line_addr_diff = 0x%x,line_len_old = 0x%x,diff = 0x%x,pack_info.data_addr_offset = 0x%X",
@@ -666,24 +674,31 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                                           pack_info.data_addr_offset
                                                          );
                                                  }
+#endif
                                              switch (current_chip_model)
                                              {
-                                               case TMS320_SER:
-                                                 pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset-(diff>>1);//表示该行数据应该写入的真实地址
+                                               case TMS320_SER://表示该行数据应该写入的真实地址
+                                                 pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset-(diff>>1);
+
                                                  break;
-                                               case STM32_SER:
-                                                  pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地
+                                               case STM32_SER://表示该行数据应该写入的真实地
+                                                  pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;
+
                                                  break;
                                                default:
                                                  break;
                                              }
+#if DEBUG
                                               qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+#endif
                                              for(int i = 0;i<diff;i++)
                                                  {
                                                      pack_info.Data[i] = 0xFF;
                                                      pack_info.data_cnt++;
                                                  }
+#if DEBUG
                                               qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+#endif
                                              for( int i = 0;i <pack_info.data_len;i++)
                                              {
                                                 pack_info.Data[diff+i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
@@ -692,18 +707,20 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                                  qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
                                                 #endif
                                              }
-                                              qDebug("pack_info.data_cnt = %d,diff = %d",pack_info.data_cnt,diff);
-                                             for(int i=0;i<pack_info.data_cnt;i++)
-                                                 {
-                                                     qDebug(" pack_info.Data[%d] = 0x%02X",i,pack_info.Data[i]);
-                                                 }
-                                              qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+#if DEBUG
+                                        qDebug("pack_info.data_cnt = %d,diff = %d",pack_info.data_cnt,diff);
+                                        for(int i=0;i<pack_info.data_cnt;i++)
+                                            {
+                                                qDebug(" pack_info.Data[%d] = 0x%02X",i,pack_info.Data[i]);
+                                            }
+                                         qDebug("pack_info.data_cnt = %d",pack_info.data_cnt);
+#endif
+
                                          }
                                     }
                                 else
                                     {
                                         pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
-                                     //   for( int i = 0;i <(pack_info.data_cnt);i++)
                                         for( int i = 0;i <(pack_info.data_len);i++)
                                         {
                                            pack_info.Data[i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
@@ -741,11 +758,12 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                          line_addr_old = pack_info.data_addr_offset;
                          line_data_type_old = pack_info.data_type;
                          line_len_old = pack_info.data_len;
+
+                         #if DEBUG
                          qDebug("line_addr_old = 0x%X,line_data_type_old = 0x%x,line_len_old = 0x%x\r",
                                 line_addr_old,
                                 line_data_type_old,
                                 line_len_old);
-                         #if DEBUG
                             test = firmwareFile.pos();
                             qDebug() << "test = "<<test;
                          #endif
@@ -1137,222 +1155,7 @@ void MainWindow::on_scanNodeAction_triggered()
 
 void MainWindow::on_Fun_test_clicked()
 {
-    int status = 0;
-    SEND_INFO send_data;
-    send_data.read_start_flag = 0;
-    send_data.data_cnt  = 0;
-    send_data.data_addr = 0x00;
-    send_data.data_len  = 0;
-    send_data.line_cnt  = 0;
-    send_data.line_num  = 16;
-#if DEBUG
-    ui->progressBar->setValue(0);
-#endif
-    status = CAN_BL_erase(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,0x800,9800,File_hex);
-    if(status == 1)
-        {
-#if DEBUG
-            qDebug()<<tr("擦除失败");
-#endif
-            return ;
-        }
-#if DEBUG
-             qint64 test = 0xFF;
-#endif
-    bool ret;
-    PACK_INFO pack_info;
-    int   hex_size = 0;
-    char hex_buf[128];
-    char bin_buf[1028];
-    QFile file(ui->firmwareLineEdit->text());
-#if DEBUG
-    qDebug() << "file name ;"<<file.fileName();
-#endif
-    ret = file.open(QFile::ReadOnly);//以只读的方式打开文件
-    if(ret == 0)
-        {
-#if DEBUG
-           qDebug() << "open file fals;";
-#endif
-            return;
-        }
-    ret = file.seek(0);//移动文件指针到文件头
-    if(ret == 0)
-        {
-#if DEBUG
-             qDebug() << "firmwareFile.seek";
-#endif
-            return;
-        }
 
-#if DEBUG
-    test = file.pos();
-    ui->progressBar->setWindowTitle("文件读取");
-    ui->progressBar->setRange(0,file.size());
-    qDebug() << "file.size() = "<<file.size();
-#endif
-    while(hex_size <file.size())
-        {
-            file.readLine((char*)hex_buf,10);
-            if(hex_buf[0] == ':')//表示是起始标志,判断刚才读取的数据中的第一个字节是否是起始标志
-                {
-#if DEBUG
-                  qDebug() << "hex_buf  = "<<hex_buf ;
-#endif
-                  hex_to_bin(&hex_buf[1],bin_buf,8);//将读取的9个字节后面8字节由ASC_II转换为hex(16进制数据)
-                  pack_info.data_type = bin_buf[6]<<4|bin_buf[7];
-                  switch (pack_info.data_type)
-                      {
-                      case DATA_BASE_ADDR:
-#if DEBUG
-                           qDebug() << " DATA_BASE_ADDR";
-#endif
-                          break;
-                      case DATA_Rrecord:
-#if DEBUG
-                           qDebug() << " DATA_Rrecord";
-#endif
-                          break;
-                      case DATA_END:
-#if DEBUG
-                           qDebug() << " DATA_END";
-#endif
-                      default:
-                          break;
-                      }
-                  //---------------------------------------------------------
-                  if(send_data.read_start_flag == 0)//如果该标志位为0,表示这是第一次读取数据,此时将标志位置一
-                      {
-                          send_data.read_start_flag = 1;
-                          send_data.line_num        = 16;
-                          send_data.line_cnt        = 0;
-                          send_data.data_cnt        = 0;
-                          send_data.data_len        = 0;
-                      }
-                  else
-                      {
-                          if(pack_info.data_type == DATA_BASE_ADDR||pack_info.data_type == DATA_END)//判断该行的数据是,如果是表示基地址
-                          {
-                            status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),
-                                                   ui->channelIndexComboBox->currentIndex(),
-                                                   0x134,
-                                                   &send_data,
-                                                   90);
-                              if(status != 0x00)
-                              {
-#if DEBUG
-                                  qDebug() << " write faile-1";
-#endif
-                                  return ;
-                              }
-                              status              = 0xFF;
-                              send_data.data_len  = 0;
-                              send_data.data_cnt  = 0;
-                              send_data.data_addr = 0x00;
-                              send_data.line_cnt  = 0;
-                              for(int i = 0;i < 1028;i++)
-                              {
-                                  send_data.data[i] = 0x00;
-                              }
-                          }
-                          else if(send_data.line_cnt == send_data.line_num)//到了指定的行数进行数据发送
-                          {
-                              status =  CAN_BL_write(ui->deviceIndexComboBox->currentIndex(),
-                                                     ui->channelIndexComboBox->currentIndex(),
-                                                     0x134,
-                                                     &send_data,
-                                                     90);
-                                if(status != 0x00)
-                                {
-#if DEBUG
-                                        qDebug() << " write faile-2";
-#endif
-                                    return ;
-                                }
-                              status = 0xFF;
-                              send_data.data_len  = 0;
-                              send_data.data_cnt  = 0;
-                              send_data.data_addr = 0x00;
-                              send_data.line_cnt  = 0;
-                              for(int i = 0;i < 1028;i++)
-                              {
-                                  send_data.data[i] = 0x00;
-                              }
-                          }
-                          else
-                          {
-
-                          }
-                      }
-                      pack_info.data_len = bin_buf[0]<<4|bin_buf[1];
-                      if(pack_info.data_type == DATA_Rrecord)//判断该行的数据是,如果是表示基地址
-                      {
-                          pack_info.data_addr_offset = bin_buf[2]<<12|bin_buf[3]<<8|bin_buf[4]<<4|bin_buf[5];
-                      }
-                      else
-                      {
-                          pack_info.data_addr_offset = 0x0000;
-                      }
-                      Data_clear(hex_buf,128);
-                      file.readLine((char*)hex_buf,(pack_info.data_len*2+3+1));
-#if DEBUG
-                      qDebug() << "hex_buf is = "<<hex_buf;
-#endif
-                      hex_to_bin(&hex_buf[0],bin_buf,pack_info.data_len*2);//将读取的数据转换为hex;
-                      if(pack_info.data_type == DATA_BASE_ADDR)
-                      {
-                        pack_info.data_base_addr = bin_buf[0]<<12|bin_buf[1]<<8|bin_buf[2]<<4|bin_buf[3];
-                        pack_info.data_base_addr = pack_info.data_base_addr<<16;
-                      }
-                      else if(pack_info.data_type == DATA_Rrecord)
-                      {
-                            pack_info.data_addr = pack_info.data_base_addr+pack_info.data_addr_offset;//表示该行数据应该写入的真实地址
-                            for( int i = 0;i <pack_info.data_len;i++)
-                            {
-                               pack_info.Data[i] = bin_buf[i*2]<<4|bin_buf[2*i+1];
-#if DEBUG
-                                qDebug() << "pack_info.Data["<<i<<"]="<<pack_info.Data[i];
-#endif
-                            }
-
-                     }
-                      if(pack_info.data_type == DATA_Rrecord)
-                          {
-                              if(send_data.line_cnt == 0)//如果计数器还为0,表示还是第一次读取,因此需要更新写入数据的地址
-                              {
-                                  send_data.data_addr = pack_info.data_addr;//将第一行的数据地址作为该数据包的写入地址
-                              }
-                              //以下是将刚才读取的数据写入send_data.data数组中
-                              for(int i = 0;i < pack_info.data_len;i++)
-                              {
-                                  send_data.data_cnt                   = i;
-                                  send_data.data[i+send_data.data_len] = pack_info.Data[i];
-                              }
-                              send_data.data_cnt = pack_info.data_len;
-                              send_data.data_len = send_data.data_len+send_data.data_cnt;
-                              send_data.line_cnt++;
-                          }
-                    Data_clear(hex_buf,128);
-                    Data_clear(bin_buf,1028);
-                    Data_clear_int(&pack_info.Data[0],64);
-#if DEBUG
-                    test = file.pos();
-                    qDebug() << "test = "<<test;
-#endif
-                    file.seek(file.pos()+1);
-#if DEBUG
-                    test = file.pos();
-                    qDebug() << "test = "<<test;
-#endif
-                }
-
-#if DEBUG
-             hex_size = file.pos();
-            qDebug() << "hex_size = "<<hex_size;
-            ui->progressBar->setValue(hex_size);
-#endif
-        }
-     CAN_BL_excute(ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),0x134,CAN_BL_APP);
 }
 
 void MainWindow::on_contactUsAction_triggered()
@@ -1538,12 +1341,12 @@ void MainWindow::on_Close_CAN_clicked()
 
 void MainWindow::on_action_Open_CAN_triggered()
 {
-on_Connect_USB_CAN_clicked();
-ui->action_Open_CAN->setEnabled(false);
-ui->action_Close_CAN->setEnabled(true);
-ui->action_Open_CAN->setEnabled(false);
-ui->action_Close_CAN->setEnabled(true);
-ui->scanNodeAction->setEnabled(true);
+    on_Connect_USB_CAN_clicked();
+    ui->action_Open_CAN->setEnabled(false);
+    ui->action_Close_CAN->setEnabled(true);
+    ui->action_Open_CAN->setEnabled(false);
+    ui->action_Close_CAN->setEnabled(true);
+    ui->scanNodeAction->setEnabled(true);
 }
 
 void MainWindow::on_action_Close_CAN_triggered()
@@ -1553,6 +1356,27 @@ void MainWindow::on_action_Close_CAN_triggered()
     ui->action_Close_CAN->setEnabled(false);
     ui->scanNodeAction->setEnabled(false);
 }
+
+void MainWindow::on_action_savefile_triggered()
+{
+        QString fileName;
+        fileName = QFileDialog::getSaveFileName(this,
+                                                tr("保存文件"),
+                                                "",
+                                                tr("Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*);;文本文档(*.txt)")
+                                                );
+        qDebug()<<"on_action_savefile_triggered "<<fileName;
+
+        if (!fileName.isNull())
+        {
+                            //fileName是文件名
+        }
+        else
+        {
+
+        }
+}
+
 /*------------------以下函数是根据自己的CAN设备进行编写--------------------------------------------*/
 int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut)
 {
@@ -1608,8 +1432,14 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
             }
             if(ret == 1)
             {
-                *pVersion = can_read_msg[0].Data[0]<<24|can_read_msg[0].Data[1]<<16|can_read_msg[0].Data[2]<<8|can_read_msg[0].Data[3]<<0;
-                *pType    = can_read_msg[0].Data[4]<<24|can_read_msg[0].Data[5]<<16|can_read_msg[0].Data[6]<<8|can_read_msg[0].Data[7]<<0;
+                *pVersion = can_read_msg[0].Data[0]<<0x18|\
+                            can_read_msg[0].Data[1]<<0x10|\
+                            can_read_msg[0].Data[2]<<0x08|\
+                            can_read_msg[0].Data[3]<<0x00;
+                *pType    = can_read_msg[0].Data[4]<<0x18|\
+                            can_read_msg[0].Data[5]<<0x10|\
+                            can_read_msg[0].Data[6]<<0x08|\
+                            can_read_msg[0].Data[7]<<0;
             }
         }
 
@@ -1645,7 +1475,7 @@ int MainWindow::CAN_BL_erase(int DevIndex, int CANIndex, unsigned short NodeAddr
     Bootloader_data.data[0]           = ( FlashSize & 0xFF000000 ) >> 24;
     Bootloader_data.data[1]           = ( FlashSize & 0xFF0000 ) >> 16;
     Bootloader_data.data[2]           = ( FlashSize & 0xFF00 ) >> 8;
-    Bootloader_data.data[3]           = ( FlashSize & 0x00FF );
+    Bootloader_data.data[3]           = ( FlashSize & 0xFF );
     Bootloader_data.data[4]           = file_type;
     can_send_msg.DataLen              = Bootloader_data.DLC;
     can_send_msg.SendType             = 1;
@@ -1937,10 +1767,8 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
     VCI_ClearBuffer(4,DevIndex,CANIndex);
     return CAN_SUCCESS;
 }
-/**********************************************************************************
- * 以下代码均为对hex文件解码需要的代码
- * 对hex解码的方式目前是根据自己的想法进行写的,后续可参考其他的方式
-**********************************************************************************/
+// 以下代码均为对hex文件解码需要的代码
+// 对hex解码的方式目前是根据自己的想法进行写的,后续可参考其他的方式
 void MainWindow::Data_clear_int(  unsigned short  int *data,unsigned long int len)
 {
     unsigned long int i;
@@ -1950,7 +1778,6 @@ void MainWindow::Data_clear_int(  unsigned short  int *data,unsigned long int le
         data++;
     }
 }
-
 void MainWindow::Data_clear(  char *data,unsigned long int len)
 {
      unsigned long int i;
@@ -2004,23 +1831,3 @@ unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short in
      }
      return crc_res;
 }
-void MainWindow::on_action_savefile_triggered()
-{
-        QString fileName;
-        fileName = QFileDialog::getSaveFileName(this,
-                                                tr("保存文件"),
-                                                "",
-                                                tr("Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*);;文本文档(*.txt)")
-                                                );
-        qDebug()<<"on_action_savefile_triggered "<<fileName;
-
-        if (!fileName.isNull())
-        {
-                            //fileName是文件名
-        }
-        else
-        {
-
-        }
-}
-
