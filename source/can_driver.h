@@ -2,17 +2,14 @@
 #define CAN_DRIVER_H
 #define CAN_Id_Standard   0//表示标准帧
 #define CAN_Id_Extended   1//表示扩展帧
-#define CAN_ID_STD      0
-#define CAN_ID_EXT      1
-//--以下宏定义白哦是当前设备运行的固件属性
+#define CAN_ID_STD      CAN_Id_Standard
+#define CAN_ID_EXT      CAN_Id_Extended
+//以下宏定义表示当前设备运行的固件属性
 #define CAN_BL_BOOT     0x555555
 #define CAN_BL_APP      0xAAAAAA
-//---------------------------------------------------
-//--------------------
 //对hex文件解码使用的数据结构
 #define NUM_OFFSET   48
 #define CHAR_OFFSET  55
-//---------------
 //关于hex文件中的相关信息
 /*
 第一个字节 表示本行数据的长度；
@@ -102,11 +99,11 @@ typedef struct _Boot_CMD_LIST
 typedef struct _SEND_INFO
 {
     unsigned char data[1028];//缓存数据
-    unsigned char line_num;//表示读取数据的行数,最大为2;
+    unsigned char line_num;//表示读取数据的行数,最大为32;
     unsigned char read_start_flag;//表示开始读取数据标志位
     unsigned char line_cnt;//表示读取文件的函数,最大值不能大于line_num
     unsigned short int data_len;//表示需要发送的数据长度;
-    unsigned short int data_cnt;//表示需要发送多少数据,最大值为66
+    unsigned short int data_cnt;//表示需要发送多少数据,最大值为1024
     unsigned short int pack_cnt;//表示当前已经发送的数据包的个数,仅仅是测试使用.
     unsigned short int pack_size;//表示每个每次读取bin文件的长度,仅仅是在读取bin文件时使用
     unsigned long int data_addr;//表示当前数据的写入地址对于hex文件表示实际的地址,对于bin文件是表示偏移地址
