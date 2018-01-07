@@ -128,6 +128,16 @@ typedef struct _Device_INFO
                         unsigned  int FW_TYPE:24;//固件类型
                 }bits;
         }FW_TYPE;
-        unsigned   int FW_Version;//固件版本
+        union
+        {
+            unsigned    int all;
+            struct
+            {
+                unsigned    int Version:	6;//固件版本
+                unsigned    int date:	6;
+                unsigned    int month:	4;
+                unsigned    int year:	16;
+            }bits;
+        }FW_Version;//固件版本
 }Device_INFO;
 #endif // CAN_DRIVER_H
