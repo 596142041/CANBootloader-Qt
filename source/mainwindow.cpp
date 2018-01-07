@@ -11,15 +11,18 @@ MainWindow::MainWindow(QWidget *parent) :
     int ret = 0;
     VCI_BOARD_INFO1 vci;
 #else
-    int ret = 9;
+    int ret = 9;//兼容公司使用的CAN
 #endif
     ui->setupUi(this);
+    //----------------------------------------------
     ui->cmdListTableWidget->setColumnWidth(0,180);
     ui->cmdListTableWidget->setColumnWidth(1,180);
-    ui->nodeListTableWidget->setColumnWidth(0,100);
-    ui->nodeListTableWidget->setColumnWidth(1,100);
-    ui->nodeListTableWidget->setColumnWidth(2,120);
-    ui->nodeListTableWidget->setColumnWidth(3,200);
+    //-----------------------------------------------
+    ui->nodeListTableWidget->setColumnWidth(0,80);
+    ui->nodeListTableWidget->setColumnWidth(1,80);
+    ui->nodeListTableWidget->setColumnWidth(2,160);
+    ui->nodeListTableWidget->setColumnWidth(3,215);
+    //--------------------------------------------------
     for(int i=0;i<ui->cmdListTableWidget->rowCount();i++)
     {
         ui->cmdListTableWidget->setRowHeight(i,35);
@@ -96,7 +99,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     time.start();
     int ret;
     Device_INFO  DEVICE_INFO;
-    DEVICE_INFO.FW_Version      =  (uint32_t)0x00;
+    DEVICE_INFO.FW_Version.all  =  (uint32_t)0x00;
     DEVICE_INFO.FW_TYPE.all     =  (uint32_t)0x00;
     DEVICE_INFO.Device_addr.all =  (uint32_t)0x00;
     if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
@@ -241,14 +244,14 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
              default:
                  QMessageBox::warning(this,
                                       QStringLiteral("警告"),
-                                      QStringLiteral("芯片类型未知"));
+                                      QStringLiteral("芯片类型未知-247"));
                  return;
                  break;
              }
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                ui->channelIndexComboBox->currentIndex(),
                                NodeAddr,
-                               &DEVICE_INFO.FW_Version,
+                               &DEVICE_INFO.FW_Version.all,
                                &DEVICE_INFO.FW_TYPE.all,
                                120);
         if(ret == CAN_SUCCESS)
@@ -262,7 +265,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                    {
                         QMessageBox::warning(this,
                                              QStringLiteral("警告"),
-                                             QStringLiteral("执行固件程序失败！")
+                                             QStringLiteral("执行固件程序失败!-268")
                                              );
                         return;
                     }
@@ -273,7 +276,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         {
             QMessageBox::warning(this,
                                  QStringLiteral("警告"),
-                                 QStringLiteral("节点检测失败-1！")
+                                 QStringLiteral("节点检测失败!-279")
                                  );
             return;
         }
@@ -296,7 +299,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                    ui->channelIndexComboBox->currentIndex(),
                                    NodeAddr,
-                                   &DEVICE_INFO.FW_Version,
+                                   &DEVICE_INFO.FW_Version.all,
                                    &DEVICE_INFO.FW_TYPE.all,
                                    100);
             #if DEBUG
@@ -308,7 +311,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 {
                     QMessageBox::warning(this,
                                          QStringLiteral("警告"),
-                                         QStringLiteral("当前固件不为Bootloader固件！")
+                                         QStringLiteral("当前固件不为Bootloader固件!-314")
                                          );
                     return;
                 }
@@ -317,7 +320,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             {
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("节点检测失败-2！")
+                                     QStringLiteral("节点检测失败-2!-323")
                                      );
                 return;
             }
@@ -403,7 +406,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             {
                                 QMessageBox::warning(this,
                                                      QStringLiteral("警告"),
-                                                     QStringLiteral("文件过大,超过1M")
+                                                     QStringLiteral("文件过大,超过1M!-409")
                                                      );
                                 return;
                             }
@@ -411,7 +414,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             {
                                 QMessageBox::warning(this,
                                                      QStringLiteral("警告"),
-                                                     QStringLiteral("文件大小未知")
+                                                     QStringLiteral("文件大小未知!-417")
                                                      );
                                 return;
                             }
@@ -435,7 +438,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 qDebug()<<"ret = "<<ret;
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("擦出Flash失败！")
+                                     QStringLiteral("擦出Flash失败!-441")
                                      );
                 return;
             }
@@ -547,6 +550,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                            case CAN_BL_ERR_CMD:         warning_str = warning_str+ "执行命令失败";   break;
                                            default:warning_str = "";break;
                                        }
+                                       warning_str = warning_str+"-553";
                                       QMessageBox::warning(this,
                                                            QStringLiteral("警告"),
                                                            warning_str
@@ -588,6 +592,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                              case CAN_BL_ERR_CMD:         warning_str = warning_str+"执行命令失败";     break;
                                              default:warning_str = "";break;
                                           }
+                                         warning_str = warning_str+"-595";
                                           QMessageBox::warning(this,
                                                                QStringLiteral("警告"),
                                                                warning_str
@@ -834,7 +839,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             {
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("文件过大,超过1M")
+                                     QStringLiteral("文件过大,超过1M-842")
                                      );
                 return;
             }
@@ -842,7 +847,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             {
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("文件大小未知")
+                                     QStringLiteral("文件大小未知-850")
                                      );
                 return;
             }
@@ -860,7 +865,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             if(status != CAN_SUCCESS)
             {
                 warning_str.sprintf("故障代码是%d",status);
-                warning_str = warning_str+"擦出Flash失败！";
+                warning_str = warning_str+"擦出Flash失败!-866";
 #ifdef DEBUG
                 qDebug()<<"status = "<<status;
 #endif
@@ -908,6 +913,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                     case CAN_BL_ERR_CMD:         warning_str = warning_str+ "执行命令失败";   break;
                                     default:warning_str = "";break;
                                 }
+                    warning_str = warning_str+"-916";
                         QMessageBox::warning(this,
                                              QStringLiteral("警告"),
                                              warning_str
@@ -948,7 +954,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
             {
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("文件类型错误！")
+                                     QStringLiteral("文件类型错误!-957")
                                      );
                 return;
             }
@@ -957,7 +963,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     {
         QMessageBox::warning(this,
                              QStringLiteral("警告"),
-                             QStringLiteral("打开固件文件失败！")
+                             QStringLiteral("打开固件文件失败!-966")
                              );
         return;
     }
@@ -967,7 +973,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     if(ret != CAN_SUCCESS)
     {
         warning_str.sprintf("故障代码是%d",ret);
-        warning_str = warning_str+"执行固件程序失败!";
+        warning_str = warning_str+"执行固件程序失败!-973";
         QMessageBox::warning(this,
                              QStringLiteral("警告"),
                               warning_str
@@ -979,7 +985,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
          ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                 ui->channelIndexComboBox->currentIndex(),
                                 NodeAddr,
-                                &DEVICE_INFO.FW_Version,
+                                &DEVICE_INFO.FW_Version.all,
                                 &DEVICE_INFO.FW_TYPE.all,
                                 100);
         if(ret == CAN_SUCCESS)
@@ -993,22 +999,24 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 str = "APP";
             }
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),1)->setText(str);
-            str.sprintf("v%d.%d",
-                        (((DEVICE_INFO.FW_Version>>24)&0xFF)*10)|((DEVICE_INFO.FW_Version>>16)&0xFF),
-                        (((DEVICE_INFO.FW_Version>>8)&0xFF)*10)|(DEVICE_INFO.FW_Version&0xFF)
-                       );
+            str.sprintf("%d-%02d-%02d-Ver:%02d",
+                         DEVICE_INFO.FW_Version.bits.year,
+                         DEVICE_INFO.FW_Version.bits.month,
+                         DEVICE_INFO.FW_Version.bits.date,
+                         DEVICE_INFO.FW_Version.bits.Version
+                        );
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),2)->setText(str);
             //--------------------添加烧写时间长度
             str.sprintf("用时%2.3f 秒",time.elapsed()/1000.0);
             QMessageBox::warning(this,
-                                 QStringLiteral("时长"),
+                                 QStringLiteral("时长:"),
                                  str
                                  );
         }
         else
         {
             warning_str.sprintf("故障代码是:%d",ret);
-            warning_str = warning_str+"执行固件程序失败-1";
+            warning_str = warning_str+"执行固件程序失败-1016";//表示故障代码在多少行出现
             QMessageBox::warning(this,
                                  QStringLiteral("警告"),
                                  warning_str
@@ -1031,7 +1039,7 @@ void MainWindow::on_scanNodeAction_triggered()
     Device_INFO  DEVICE_INFO;
     DEVICE_INFO.Device_addr.all = (uint32_t)0x00;
     DEVICE_INFO.FW_TYPE.all     =  (uint32_t)0x00;
-    DEVICE_INFO.FW_Version      =  (uint32_t)0x00;
+    DEVICE_INFO.FW_Version.all      =  (uint32_t)0x00;
     int startAddr = 0,endAddr   = 0;
     ScanDevRangeDialog *pScanDevRangeDialog = new ScanDevRangeDialog();
     if(pScanDevRangeDialog->exec() == QDialog::Accepted)
@@ -1047,7 +1055,7 @@ void MainWindow::on_scanNodeAction_triggered()
     {
           QMessageBox::warning(this,
                                QStringLiteral("警告"),
-                               QStringLiteral("打开设备失败！")
+                               QStringLiteral("打开设备失败!-1055")
                                );
           return ;
     }
@@ -1072,7 +1080,7 @@ void MainWindow::on_scanNodeAction_triggered()
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                ui->channelIndexComboBox->currentIndex(),
                                startAddr,
-                               &DEVICE_INFO.FW_Version,
+                               &DEVICE_INFO.FW_Version.all,
                                &DEVICE_INFO.FW_TYPE.all,
                                60);
         if(ret == CAN_SUCCESS)
@@ -1103,7 +1111,13 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignHCenter);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignCenter);
             //-----------------------------------------------------------------------------------------------------------------
-            str.sprintf("v%d.%d",(((DEVICE_INFO.FW_Version>>24)&0xFF)*10)|((DEVICE_INFO.FW_Version>>16)&0xFF),(((DEVICE_INFO.FW_Version>>8)&0xFF)*10)|(DEVICE_INFO.FW_Version&0xFF));
+            //计算当前固件版本
+             str.sprintf("%d-%02d-%02d-Ver:%02d",
+                         DEVICE_INFO.FW_Version.bits.year,
+                         DEVICE_INFO.FW_Version.bits.month,
+                         DEVICE_INFO.FW_Version.bits.date,
+                          DEVICE_INFO.FW_Version.bits.Version
+                         );
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,2,item);
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignHCenter);
@@ -1155,7 +1169,6 @@ void MainWindow::on_scanNodeAction_triggered()
 
 void MainWindow::on_Fun_test_clicked()
 {
-
 }
 
 void MainWindow::on_contactUsAction_triggered()
@@ -1203,7 +1216,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     {
         QMessageBox::warning(this,
                              QStringLiteral("警告"),
-                             QStringLiteral("打开设备失败！")
+                             QStringLiteral("打开设备失败!-1219")
                              );
          ui->Connect_USB_CAN->setText(tr("无设备"));
          USB_CAN_status = 1;
@@ -1222,7 +1235,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 
             QMessageBox::warning(this,
                                  QStringLiteral("警告"),
-                                 QStringLiteral("无设备连接！")
+                                 QStringLiteral("无设备连接!-1238")
                                  );
         }
     QString cmdStr[]={"Erase","Write","Check","Excute","WriteInfo","CmdFaild","CmdSuccess","SetBaudRate"};
@@ -1267,7 +1280,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             {
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("配置设备失败！")
+                                     QStringLiteral("配置设备失败!-1283")
                                      );
                 USB_CAN_status = 3;
                 return;
@@ -1278,7 +1291,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
             {
                 QMessageBox::warning(this,
                                      QStringLiteral("警告"),
-                                     QStringLiteral("配置设备失败 USB_CAN_status = 6 ！")
+                                     QStringLiteral("配置设备失败 USB_CAN_status = 6!-1294")
                                      );
                 USB_CAN_status = 3;
                 return;
@@ -1301,6 +1314,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 
 void MainWindow::on_Close_CAN_clicked()
 {
+
     ui->action_Open_CAN->setEnabled(true);
     ui->action_Close_CAN->setEnabled(false);
     ui->scanNodeAction->setEnabled(false);
@@ -1310,7 +1324,7 @@ void MainWindow::on_Close_CAN_clicked()
         {
             QMessageBox::warning(this,
                                  QStringLiteral("警告"),
-                                 QStringLiteral("复位设备失败！")
+                                 QStringLiteral("复位设备失败!-1326")
                                  );
         }
     else
@@ -1322,7 +1336,7 @@ void MainWindow::on_Close_CAN_clicked()
         {
             QMessageBox::warning(this,
                                  QStringLiteral("警告"),
-                                 QStringLiteral("关闭设备失败！")
+                                 QStringLiteral("关闭设备失败!-1338")
                                  );
         }
     else
@@ -1337,6 +1351,7 @@ void MainWindow::on_Close_CAN_clicked()
     ui->channelIndexComboBox->setEnabled(true);
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
+    ui->nodeListTableWidget->setRowCount(0);
 }
 
 void MainWindow::on_action_Open_CAN_triggered()
@@ -1402,6 +1417,7 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
     //lpr 添加
     DWORD current_time = 0;
     DWORD new_time = 0;
+
     current_time = GetTickCount();
     unsigned char CAN_BL_Nodecheck_flag = 0;
     while (CAN_BL_Nodecheck_flag == 0)
