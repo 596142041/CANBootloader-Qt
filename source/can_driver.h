@@ -133,10 +133,10 @@ typedef struct _Device_INFO
             unsigned    int all;
             struct
             {
-                unsigned    int Version:	6;//固件版本
-                unsigned    int date:	6;
-                unsigned    int month:	4;
-                unsigned    int year:	16;
+                unsigned    int Version:	7;//固件版本
+                unsigned    int  date:	    5;//日期
+                unsigned    int month:	    4;//月
+                unsigned    int  year:	   16;//年
             }bits;
         }FW_Version;//固件版本
 }Device_INFO;
