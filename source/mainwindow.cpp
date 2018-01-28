@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //----------------------------------------------
     ui->cmdListTableWidget->setColumnWidth(0,180);
     ui->cmdListTableWidget->setColumnWidth(1,180);
+    ui->cmdListTableWidget->verticalHeader()->hide();
     //-----------------------------------------------
     ui->nodeListTableWidget->setColumnWidth(0,80);
     ui->nodeListTableWidget->setColumnWidth(1,80);
@@ -28,8 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->cmdListTableWidget->setRowHeight(i,35);
     }
 
-#ifndef VCI_PCI5121
-    //检测是否有CAN连接
+#ifndef VCI_PCI5121  //检测是否有CAN连接
     ret = VCI_FindUsbDevice(&vci);//自用的CAN可以检测有几个CAN设备连接
 #endif
     if(ret <= 0)
@@ -1116,7 +1116,7 @@ void MainWindow::on_scanNodeAction_triggered()
                          DEVICE_INFO.FW_Version.bits.year,
                          DEVICE_INFO.FW_Version.bits.month,
                          DEVICE_INFO.FW_Version.bits.date,
-                          DEVICE_INFO.FW_Version.bits.Version
+                         DEVICE_INFO.FW_Version.bits.Version
                          );
             item = new QTableWidgetItem(str);
             ui->nodeListTableWidget->setItem(ui->nodeListTableWidget->rowCount()-1,2,item);
@@ -1124,7 +1124,7 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,2)->setTextAlignment(Qt::AlignCenter);
             //------------------------------------------------------------------------------------------------------------------
             uint32_t chip_temp = 0x00;
-            chip_temp = DEVICE_INFO.FW_TYPE.bits.Chip_Value&((uint32_t)0xFF);
+            chip_temp          = DEVICE_INFO.FW_TYPE.bits.Chip_Value&((uint32_t)0xFF);
             #if DEBUG
             qDebug()<<"DEVICE_INFO.FW_TYPE.bits.Chip_Value = "<<DEVICE_INFO.FW_TYPE.bits.Chip_Value<<"startAddr = "<<startAddr<<"chip_temp = "<<chip_temp;
             #endif
@@ -1174,21 +1174,17 @@ void MainWindow::on_Fun_test_clicked()
 void MainWindow::on_contactUsAction_triggered()
 {
     QString AboutStr;
-    AboutStr.append(("官方网站<span style=\"font-size:12px;\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>：<a href=\"http://www.usbxyz.com\">www.usbxyz.com</a><br>"));
-    AboutStr.append(("官方论坛<span style=\"font-size:12px;\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>：<a href=\"http://www.embed-net.com\">www.embed-net.com</a><br>"));
-    AboutStr.append(("官方淘宝店<span style=\"font-size:9px;\">&nbsp;&nbsp;&nbsp;</span>：<a href=\"http://usbxyz.taobao.com/\">usbxyz.taobao.com</a><br>"));
-    AboutStr.append(("技术支持QQ：188298598<br>"));
-    AboutStr.append(("产品咨询QQ：188298598"));
+    AboutStr.append(("源代码<span style=\"font-size:12px;\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>：<a href=\"https://github.com/596142041/CANBootloader-Qt\">https://github.com/596142041/CANBootloader-Qt</a><br>"));
+    AboutStr.append(("技术支持邮箱:wcj53636746@126.com<br>"));
     QMessageBox::about(this,("联系我们"),AboutStr);
 }
 
 void MainWindow::on_aboutAction_triggered()
 {
     QString AboutStr;
-    AboutStr.append("USB2XXX USB2CAN Bootloader 1.0.1<br>");
-    AboutStr.append(("支持硬件：USB2XXX<br>"));
-    AboutStr.append(("购买地址：<a href=\"http://usbxyz.taobao.com/\">usbxyz.taobao.com</a>"));
-    QMessageBox::about(this,("关于USB2XXX USB2CAN Bootloader"),AboutStr);
+    AboutStr.append(" CANBootloader 2.0.1<br>");
+    AboutStr.append(("支持硬件:根据自己设备进行更改<br>"));
+    QMessageBox::about(this,("关于CANBootloader"),AboutStr);
 }
 
 void MainWindow::on_exitAction_triggered()
