@@ -75,8 +75,8 @@ private slots:
 
     private:
     Ui::MainWindow *ui;
-    Boot_CMD_LIST cmd_list;
-    QStringList   chip_list;
+    QStringList    chip_list;
+    Boot_CMD_LIST  cmd_list;
     int CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int      TimeOut);
     int CAN_BL_init(Boot_CMD_LIST pCmdList);
     int CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);
@@ -87,6 +87,7 @@ private slots:
     unsigned char convertion(char *hex_data);
     void hex_to_bin(char *hex_src,char *bin_dst,unsigned char len);
     unsigned short int CRCcalc16(unsigned char *data, unsigned short int len);
+    void cmdListTableWidget_edit(bool state);//表示当前cmdlsit是否可编辑
 };
 
 #endif // MAINWINDOW_H
