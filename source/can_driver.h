@@ -1,4 +1,4 @@
-#ifndef CAN_DRIVER_H
+﻿#ifndef CAN_DRIVER_H
 #define CAN_DRIVER_H
 #define CAN_Id_Standard   0//表示标准帧
 #define CAN_Id_Extended   1//表示扩展帧
