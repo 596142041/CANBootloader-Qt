@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow_ch.h"
 #include <QDebug>
 #include "qdebug.h"
@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //-----------------------------------------------
     ui->nodeListTableWidget->setColumnWidth(0,80);
     ui->nodeListTableWidget->setColumnWidth(1,80);
+
     ui->nodeListTableWidget->setColumnWidth(2,160);
     ui->nodeListTableWidget->setColumnWidth(3,215);
     //--------------------------------------------------
@@ -65,7 +66,11 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
     QString fileName;
     QString file_path = ui->firmwareLineEdit->text();
-    fileName = QFileDialog::getOpenFileName(this,tr("Open files"),file_path,"Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)");
+    fileName = QFileDialog::getOpenFileName(this,
+                                            tr("Open files"),
+                                            file_path,
+                                            "Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)"
+                                            );
     if(fileName.isNull())
     {
         return;
@@ -180,7 +185,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                             line_num_str.sprintf("执行固件程序失败,行号:%d",__LINE__);
                             QMessageBox::warning(this,
                                                  QStringLiteral("警告"),
-                                                 line_num_str//QStringLiteral("执行固件程序失败"+line_num_str)
+                                                 line_num_str
                                                  );
                             return;
                         }
@@ -1640,7 +1645,9 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
        while (CAN_BL_write_flag == 0)
            {
                new_time = GetTickCount();
+#if DEBUG
                qDebug("new_time-current_time = %lu,TimeOut = %d",(new_time-current_time),TimeOut);
+#endif
                if(new_time-current_time>TimeOut)
                    {
                       CAN_BL_write_flag = 1;
