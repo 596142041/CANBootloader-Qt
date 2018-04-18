@@ -6,7 +6,7 @@ TEMPLATE = app
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-win32:LIBS += -L$$PWD/lib/win32/ -lControlCAN
+
 //DEFINES += LANGUE_EN
 
 RESOURCES += \
@@ -31,3 +31,8 @@ SOURCES += \
     ../source/main.cpp \
     ../source/mainwindow.cpp \
     ../source/scandevrangedialog.cpp
+
+unix|win32: LIBS += -L$$PWD/lib/win32/ -lControlCAN
+
+INCLUDEPATH += $$PWD/lib/win32
+DEPENDPATH += $$PWD/lib/win32
