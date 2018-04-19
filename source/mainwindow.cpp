@@ -1476,7 +1476,7 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
                 *pType    = can_read_msg[0].Data[4]<<0x18|\
                             can_read_msg[0].Data[5]<<0x10|\
                             can_read_msg[0].Data[6]<<0x08|\
-                            can_read_msg[0].Data[7]<<0;
+                            can_read_msg[0].Data[7]<<0x00;
             }
         }
 
