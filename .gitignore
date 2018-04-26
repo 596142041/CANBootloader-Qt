@@ -6,5 +6,4 @@ CAN_Bootloader.pro.user
 mainwindow.cpp.i10184
 mainwindow.cpp.nV4204
 mainwindow-*.cpp
-.gitignore
-After Build - User command #1: fromelf.exe --bin -o ..\output\STM32F4_APP.bin ..\output\STM32F4_APP.axf
+.gitignore 
