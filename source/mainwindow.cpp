@@ -450,7 +450,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                            ui->channelIndexComboBox->currentIndex(),
                            NodeAddr,
                            size_temp,
-                           erase_timeout_temp,
+                           erase_timeout_temp+1000,
                            File_hex);
             if(status != CAN_SUCCESS)
             {
@@ -871,7 +871,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                                     ui->channelIndexComboBox->currentIndex(),
                                     NodeAddr,
                                     firmwareFile.size(),
-                                    erase_timeout_temp,
+                                    erase_timeout_temp+1000,
                                     File_bin
                                     );
 #ifdef DEBUG
