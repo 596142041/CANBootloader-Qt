@@ -5,5 +5,4 @@ CANBootloader
 CAN_Bootloader.pro.user
 mainwindow.cpp.i10184
 mainwindow.cpp.nV4204
-mainwindow-*.cpp
-.gitignore 
+mainwindow-*.cpp 
