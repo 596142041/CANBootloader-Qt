@@ -112,21 +112,21 @@ typedef struct _Device_INFO
 {
         union
         {
-                unsigned short int all;
-                struct
-                {
-                        unsigned short int Device_addr:	12;//设备地址
-                        unsigned short int reserve:	4;//保留位
-                }bits;//设备地址
+            unsigned short int all;
+            struct
+            {
+                    unsigned short int Device_addr:	12;//设备地址
+                    unsigned short int reserve:	4;//保留位
+            }bits;//设备地址
         }Device_addr;//设备地址相关信息
         union
         {
-                unsigned  int all;
-                struct
-                {
-                        unsigned  int Chip_Value:8;// 控制器芯片类型
-                        unsigned  int FW_TYPE:24;//固件类型
-                }bits;
+            unsigned  int all;
+            struct
+            {
+                    unsigned  int Chip_Value:8;// 控制器芯片类型
+                    unsigned  int FW_TYPE:24;//固件类型
+            }bits;
         }FW_TYPE;
         union
         {
