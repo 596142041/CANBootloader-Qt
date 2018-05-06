@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->updateFirmwarePushButton->setEnabled(false);
     ui->newBaudRateComboBox->setEnabled(false);
     ui->allNodeCheckBox->setEnabled(false);
-    ui->baudRateComboBox->setCurrentIndex(2);
+    ui->baudRateComboBox->setCurrentIndex(4);
     ui->action_Open_CAN->setEnabled(true);
     ui->action_Close_CAN->setEnabled(false);
     ui->scanNodeAction->setEnabled(false);
@@ -994,10 +994,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         warning_str.sprintf("故障代码是%d",ret);
         warning_str = warning_str+"执行固件程序失败!";
         line_num_str.sprintf("行号:%d",__LINE__);
-        QMessageBox::warning(this,
-                             QStringLiteral("警告"),
-                              warning_str+line_num_str
-                             );
+        QMessageBox::warning(this, QStringLiteral("警告"), warning_str+line_num_str);
     }
     Sleep(50);
     if(!ui->allNodeCheckBox->isChecked())
@@ -1219,7 +1216,8 @@ void MainWindow::on_Connect_USB_CAN_clicked()
 {
     int ret;
     bool state;
-cmdListTableWidget_edit(false);
+    QString line_num_str = NULL;
+    cmdListTableWidget_edit(false);
     QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini"; ;
     QSettings settings(file_path, QSettings::IniFormat);
     settings.beginGroup("chip");
@@ -1234,10 +1232,8 @@ cmdListTableWidget_edit(false);
     state = VCI_OpenDevice(4,ui->deviceIndexComboBox->currentIndex(),0);
     if(!state)
     {
-        QMessageBox::warning(this,
-                             QStringLiteral("警告"),
-                             QStringLiteral("打开设备失败!-1219")
-                             );
+        line_num_str.sprintf("打开设备失败!,行号:%d",__LINE__);
+        QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
          ui->Connect_USB_CAN->setText(tr("无设备"));
          USB_CAN_status = 1;
         return;
@@ -1252,11 +1248,8 @@ cmdListTableWidget_edit(false);
         }
     if(USB_CAN_status == 1)
         {
-
-            QMessageBox::warning(this,
-                                 QStringLiteral("警告"),
-                                 QStringLiteral("无设备连接!-1238")
-                                 );
+        line_num_str.sprintf("无设备连接!,行号:%d",__LINE__);
+        QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
         }
     QString cmdStr[]={"Erase","Write","Check","Excute","WriteInfo","CmdFaild","CmdSuccess","SetBaudRate"};
     uint8_t cmdData[16];
@@ -1298,10 +1291,8 @@ cmdListTableWidget_edit(false);
             ret = VCI_InitCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex(),&VCI_init);
             if(ret!=1)
             {
-                QMessageBox::warning(this,
-                                     QStringLiteral("警告"),
-                                     QStringLiteral("配置设备失败!-1283")
-                                     );
+                line_num_str.sprintf("配置设备失败,行号:%d",__LINE__);
+                QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
                 USB_CAN_status = 3;
                 return;
             }
@@ -1309,10 +1300,8 @@ cmdListTableWidget_edit(false);
             ret = VCI_StartCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
             if(ret!=1)
             {
-                QMessageBox::warning(this,
-                                     QStringLiteral("警告"),
-                                     QStringLiteral("配置设备失败 USB_CAN_status = 6!-1294")
-                                     );
+                line_num_str.sprintf("配置设备失败,行号:%d",__LINE__);
+                QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
                 USB_CAN_status = 3;
                 return;
             }
@@ -1340,13 +1329,12 @@ void MainWindow::on_Close_CAN_clicked()
     ui->scanNodeAction->setEnabled(false);
     cmdListTableWidget_edit(true);
     int ret;
+     QString line_num_str = NULL;
     ret = VCI_ResetCAN(4,ui->deviceIndexComboBox->currentIndex(),ui->channelIndexComboBox->currentIndex());
     if(ret != 1)
         {
-            QMessageBox::warning(this,
-                                 QStringLiteral("警告"),
-                                 QStringLiteral("复位设备失败!-1326")
-                                 );
+        line_num_str.sprintf("复位设备失败,行号:%d",__LINE__);
+        QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
         }
     else
         {
@@ -1378,11 +1366,19 @@ void MainWindow::on_Close_CAN_clicked()
 void MainWindow::on_action_Open_CAN_triggered()
 {
     on_Connect_USB_CAN_clicked();
-    ui->action_Open_CAN->setEnabled(false);
-    ui->action_Close_CAN->setEnabled(true);
-    ui->action_Open_CAN->setEnabled(false);
-    ui->action_Close_CAN->setEnabled(true);
-    ui->scanNodeAction->setEnabled(true);
+    if(USB_CAN_status == 0)
+    {
+        ui->action_Open_CAN->setEnabled(false);
+        ui->action_Close_CAN->setEnabled(true);
+        ui->action_Open_CAN->setEnabled(false);
+        ui->action_Close_CAN->setEnabled(true);
+        ui->scanNodeAction->setEnabled(true);
+    }
+    else
+    {
+
+    }
+
 }
 
 void MainWindow::on_action_Close_CAN_triggered()
@@ -1401,7 +1397,6 @@ void MainWindow::on_action_savefile_triggered()
                                                 "",
                                                 tr("Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*);;文本文档(*.txt)")
                                                 );
-        qDebug()<<"on_action_savefile_triggered "<<fileName;
 
         if (!fileName.isNull())
         {
@@ -1467,21 +1462,32 @@ int MainWindow::CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAd
                  return CAN_ERR_USB_READ_FAIL;//USB读数据失败
                 VCI_ClearBuffer(4,DevIndex,CANIndex);
             }
-            if(ret == 1)
+            else
             {
-                *pVersion = can_read_msg[0].Data[0]<<0x18|\
-                            can_read_msg[0].Data[1]<<0x10|\
-                            can_read_msg[0].Data[2]<<0x08|\
-                            can_read_msg[0].Data[3]<<0x00;
-                *pType    = can_read_msg[0].Data[4]<<0x18|\
-                            can_read_msg[0].Data[5]<<0x10|\
-                            can_read_msg[0].Data[6]<<0x08|\
-                            can_read_msg[0].Data[7]<<0x00;
+                Bootloader_data.ExtId.bit.reserve = 0x00;
+                Bootloader_data.ExtId.bit.cmd = cmd_list.CmdSuccess;
+                Bootloader_data.ExtId.bit.addr = NodeAddr;
+                for(int i = 0;i<ret;i++)
+                {
+                    if(can_read_msg[i].ID == Bootloader_data.ExtId.all)
+                    {
+                        *pVersion = can_read_msg[0].Data[0]<<0x18|\
+                                    can_read_msg[0].Data[1]<<0x10|\
+                                    can_read_msg[0].Data[2]<<0x08|\
+                                    can_read_msg[0].Data[3]<<0x00;
+                        *pType    = can_read_msg[0].Data[4]<<0x18|\
+                                    can_read_msg[0].Data[5]<<0x10|\
+                                    can_read_msg[0].Data[6]<<0x08|\
+                                    can_read_msg[0].Data[7]<<0x00;
+                         VCI_ClearBuffer(4,DevIndex,CANIndex);
+                         return CAN_SUCCESS;
+                    }
+                }
             }
         }
 
     VCI_ClearBuffer(4,DevIndex,CANIndex);
-    return CAN_SUCCESS;
+     return  CAN_BL_ERR_TIME_OUT;//超时错误
 }
 
 int MainWindow::CAN_BL_init(Boot_CMD_LIST pCmdList)
