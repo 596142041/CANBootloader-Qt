@@ -88,6 +88,7 @@ private slots:
     void hex_to_bin(char *hex_src,char *bin_dst,unsigned char len);
     unsigned short int CRCcalc16(unsigned char *data, unsigned short int len);
     void cmdListTableWidget_edit(bool state);//表示当前cmdlsit是否可编辑
+    unsigned long int hex_size_calc(QString str);
 };
 
 #endif // MAINWINDOW_H

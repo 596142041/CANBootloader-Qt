@@ -1857,6 +1857,43 @@ void MainWindow::hex_to_bin(  char *hex_src, char *bin_dst,unsigned char len)
         hex_src++;
     }
 }
+unsigned long int MainWindow::hex_size_calc(QString str)
+{
+   int ret                          = 0;
+   unsigned long  int  file_size     = 0;
+   unsigned long  int  hex_size     = 0;
+   char hex_buf[90];
+   char bin_buf[40];
+   char data_type = 0xFF;
+   int data_len = 0x00;
+   QFile firmwareFile(str);
+   if (firmwareFile.open(QFile::ReadOnly))
+   {
+       ret = firmwareFile.seek(0);//移动文件指针到文件头
+      if(ret == 0)
+      {
+          return 0;
+      }
+       while(file_size <firmwareFile.size())
+       {
+           firmwareFile.readLine((char*)hex_buf,10);
+           if(hex_buf[0] == ':')//表示是起始标志,判断刚才读取的数据中的第一个字节是否是起始标志
+               {
+                   hex_to_bin(&hex_buf[1],bin_buf,8);//将读取的9个字节后面8字节由ASC_II转换为hex(16进制数据)
+                   data_type = bin_buf[6]<<4|bin_buf[7];//记录当前数据类型
+                   data_len = bin_buf[0]<<4|bin_buf[1];
+                   firmwareFile.readLine((char*)hex_buf,(data_len*2+3+1));
+                   if(data_type == 0x00)//DATA_Rrecord
+                   {
+                       hex_size = hex_size+data_len;
+                   }
+               }
+           file_size = firmwareFile.pos();
+       }
+   }
+   firmwareFile.close();
+   return hex_size;
+}
 unsigned short int MainWindow::CRCcalc16( unsigned char *data, unsigned short int len)
 {
     unsigned short int crc_res = 0xFFFF;
