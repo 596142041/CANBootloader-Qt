@@ -61,7 +61,15 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    (void)event;
+    if(USB_CAN_status == 4)
+    {
+        on_Close_CAN_clicked();
+    }
 
+}
 void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
     QString fileName;

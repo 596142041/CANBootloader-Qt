@@ -14,7 +14,7 @@
 #include <QSettings>
 #include <QDir>
 #include <QStringList>
-
+#include <QCloseEvent>
 namespace Ui {
 class MainWindow;
 }
@@ -89,6 +89,7 @@ private slots:
     unsigned short int CRCcalc16(unsigned char *data, unsigned short int len);
     void cmdListTableWidget_edit(bool state);//表示当前cmdlsit是否可编辑
     unsigned long int hex_size_calc(QString str);
+     void closeEvent(QCloseEvent *event);
 };
 
 #endif // MAINWINDOW_H
