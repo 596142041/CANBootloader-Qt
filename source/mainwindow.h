@@ -77,19 +77,19 @@ private slots:
     Ui::MainWindow *ui;
     QStringList    chip_list;
     Boot_CMD_LIST  cmd_list;
-    int CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut);
-    int CAN_BL_init(Boot_CMD_LIST pCmdList);
-    int CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);
+    int CAN_BL_Nodecheck(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int *pVersion,unsigned int *pType,unsigned int TimeOut);//设备节点检测
+    int CAN_BL_init(Boot_CMD_LIST pCmdList);//CAN设备初始化
+    int CAN_BL_erase(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int FlashSize,unsigned int TimeOut,unsigned char file_type);//擦除设备
     int CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,SEND_INFO *send_data, unsigned int TimeOut);
     int CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,unsigned int Type);
-    void  Data_clear(char *data,unsigned long int len);
-    void  Data_clear_int(unsigned  short int *data,unsigned long int len);
-    unsigned char convertion(char *hex_data);
-    void hex_to_bin(char *hex_src,char *bin_dst,unsigned char len);
-    unsigned short int CRCcalc16(unsigned char *data, unsigned short int len);
+    void  Data_clear(char *data,unsigned long int len);//数组清零
+    void  Data_clear_int(unsigned  short int *data,unsigned long int len);//整形数组清零
+    unsigned char convertion(char *hex_data);//将ACSII编码转换为hex
+    void hex_to_bin(char *hex_src,char *bin_dst,unsigned char len);//将一串ASCII转换为hex
+    unsigned short int CRCcalc16(unsigned char *data, unsigned short int len);//CRC-16校验,采用的Modbus的校验方式
     void cmdListTableWidget_edit(bool state);//表示当前cmdlsit是否可编辑
-    unsigned long int hex_size_calc(QString str);
-     void closeEvent(QCloseEvent *event);
+    unsigned long int hex_size_calc(QString str);//计算hex文件的真实大小,后面并未使用
+    void closeEvent(QCloseEvent *event);//关闭事件,用于在关闭窗口时判断设备是否关闭,如果尚未关闭,则同步关闭设备
 };
 
 #endif // MAINWINDOW_H
