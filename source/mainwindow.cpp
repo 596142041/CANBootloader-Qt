@@ -1160,7 +1160,7 @@ void MainWindow::on_scanNodeAction_triggered()
             //用于来判断芯片类型
             //-----------------------------------------------------------------------------
             str = "None";
-            QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini";
+            QString file_path = QCoreApplication::applicationDirPath()+"/config.ini";
             QSettings settings(file_path, QSettings::IniFormat);
             settings.beginGroup("chip");
              chip_list = settings.allKeys();
@@ -1225,7 +1225,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     int ret;
     bool state;
     QString line_num_str = NULL;
-    QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini"; ;
+    QString file_path = QCoreApplication::applicationDirPath()+"/config.ini"; ;
     QSettings settings(file_path, QSettings::IniFormat);
     settings.beginGroup("chip");
      chip_list = settings.allKeys();
