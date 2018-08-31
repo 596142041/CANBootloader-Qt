@@ -74,7 +74,10 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
     QString fileName;
     QString file_path = ui->firmwareLineEdit->text();
-    fileName = QFileDialog::getOpenFileName(this,
+    QString history_ini_path = QCoreApplication::applicationDirPath()+"/config.ini";
+    QSettings *read_history_ini = new QSettings(history_ini_path, QSettings::IniFormat);
+    file_path = read_history_ini->value("/history/path").toString();
+    fileName  = QFileDialog::getOpenFileName(this,
                                             tr("Open files"),
                                             file_path,
                                             "Hex Files (*.hex);;Binary Files (*.bin);;All Files (*.*)"
@@ -88,6 +91,14 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
     qDebug()<<"ui->nodeListTableWidget->rowCount() = "<<ui->nodeListTableWidget->rowCount();
     qDebug()<<"ui->nodeListTableWidget->columnCount() = "<<ui->nodeListTableWidget->currentColumn();
 #endif
+    //保存打开文件的历史记录
+    //Qt中使用QSettings类读写ini文件
+    //QSettings构造函数的第一个参数是ini文件的路径,第二个参数表示针对ini文件,第三个参数可以缺省
+    QSettings *write_history_ini = new QSettings(history_ini_path, QSettings::IniFormat);
+  write_history_ini->setValue("history/path", fileName);
+    //写入完成后删除指针
+  delete write_history_ini;
+  delete read_history_ini;
 }
 
 int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
@@ -1024,7 +1035,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
                 str = "APP";
             }
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->currentIndex().row(),1)->setText(str);
-            str.sprintf("%d-%02d-%02d-Ver:%02d",
+            str.sprintf("%d-%02d-%02d-VER:%02d",
                          DEVICE_INFO.FW_Version.bits.year,//年
                          DEVICE_INFO.FW_Version.bits.month,//月
                          DEVICE_INFO.FW_Version.bits.date,//日
@@ -1069,6 +1080,13 @@ void MainWindow::on_scanNodeAction_triggered()
     DEVICE_INFO.Device_addr.all     = (uint32_t)0x00;
     int startAddr = 0,endAddr   = 0;
     ScanDevRangeDialog *pScanDevRangeDialog = new ScanDevRangeDialog();
+    //关于扫描地址的历史记录
+    QString history_ini_path = QCoreApplication::applicationDirPath()+"/config.ini";
+    QSettings *read_history_ini = new QSettings(history_ini_path, QSettings::IniFormat);
+    startAddr = read_history_ini->value("/addr/start").toString().toInt(NULL,16);//保存为16进制
+    endAddr   = read_history_ini->value("/addr/end").toString().toInt(NULL,16);//保存为16进制转换
+    pScanDevRangeDialog->Set_endaddr(endAddr);
+    pScanDevRangeDialog->Set_startaddr(startAddr);
     if(pScanDevRangeDialog->exec() == QDialog::Accepted)
     {
         startAddr = pScanDevRangeDialog->StartAddr;
@@ -1140,7 +1158,7 @@ void MainWindow::on_scanNodeAction_triggered()
             ui->nodeListTableWidget->item(ui->nodeListTableWidget->rowCount()-1,1)->setTextAlignment(Qt::AlignCenter);
             //-----------------------------------------------------------------------------------------------------------------
             //计算当前固件版本
-             str.sprintf("%d-%02d-%02d-Ver:%02d",
+             str.sprintf("%d-%02d-%02d-VER:%02d",
                          DEVICE_INFO.FW_Version.bits.year,
                          DEVICE_INFO.FW_Version.bits.month,
                          DEVICE_INFO.FW_Version.bits.date,
@@ -1193,6 +1211,15 @@ void MainWindow::on_scanNodeAction_triggered()
         }
         startAddr++;
     }
+    //将当前的地址信息记录进入配置文件
+    QSettings *write_history_ini = new QSettings(history_ini_path, QSettings::IniFormat);
+    QString addr_str;
+    addr_str.sprintf("0x%X",pScanDevRangeDialog->StartAddr);
+    write_history_ini->setValue("/addr/start",addr_str);
+    addr_str.sprintf("0x%X",pScanDevRangeDialog->EndAddr);
+    write_history_ini->setValue("/addr/end",addr_str);
+    delete write_history_ini;
+    delete read_history_ini;
 }
 
 void MainWindow::on_Fun_test_clicked()
