@@ -29,6 +29,8 @@ private:
 
 public:
     int StartAddr,EndAddr;
+    void Set_startaddr(int start);
+    void Set_endaddr(int   end);
 };
 
 #endif // SCANDEVRANGEDIALOG_H

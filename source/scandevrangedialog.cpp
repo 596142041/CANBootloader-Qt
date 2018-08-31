@@ -40,3 +40,12 @@ void ScanDevRangeDialog::on_pushButtonCancel_clicked()
 {
     this->reject();
 }
+void ScanDevRangeDialog::Set_startaddr(int start)
+{
+
+ui->spinBoxStartAddr->setValue(start);
+}
+void ScanDevRangeDialog::Set_endaddr(int end)
+{
+ui->spinBoxEndAddr->setValue(end);
+}
