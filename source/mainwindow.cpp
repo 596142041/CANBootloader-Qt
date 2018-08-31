@@ -1225,7 +1225,6 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     int ret;
     bool state;
     QString line_num_str = NULL;
-    cmdListTableWidget_edit(false);
     QString file_path = QCoreApplication::applicationDirPath()+"/chip.ini"; ;
     QSettings settings(file_path, QSettings::IniFormat);
     settings.beginGroup("chip");
@@ -1327,6 +1326,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     ui->action_Open_CAN->setEnabled(false);
     ui->action_Close_CAN->setEnabled(true);
     ui->scanNodeAction->setEnabled(true);
+     cmdListTableWidget_edit(false);
 }
 
 void MainWindow::on_Close_CAN_clicked()
