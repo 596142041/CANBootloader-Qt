@@ -63,8 +63,13 @@ typedef struct _PACK_INFO
 #define File_None   0xF0
 #define File_bin    0xF1
 #define File_hex    0xF2
-#define STM32_SER   0x01
-#define TMS320_SER  0x02
+//芯片型号宏定义
+//分为STM32F1,STM32F4,TMS320F280x,TMS320F2833x系列
+//当前所有芯片均支持hex文件和bin文件烧写
+#define STM32F1_SER       0xA1
+#define STM32F4_SER       0xA2
+#define TMS320F280x_SER   0xB1
+#define TMS320F2833x_SER  0xB2
 //-----------------------------------------
 typedef struct _Bootloader_data
 {
