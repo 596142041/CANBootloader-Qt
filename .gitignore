@@ -5,3 +5,6 @@ mainwindow.cpp.i10184
 mainwindow.cpp.nV4204
 mainwindow-*.cpp
 .gitignore
+.svn
+Debug
+Release
