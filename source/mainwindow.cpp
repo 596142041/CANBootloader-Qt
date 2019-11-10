@@ -68,7 +68,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     {
         on_Close_CAN_clicked();
     }
-
 }
 void MainWindow::on_openFirmwareFilePushButton_clicked()
 {
@@ -84,7 +83,6 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
                                                  file_path,
                                                  "Binary Files (*.bin);;Hex Files (*.hex);;All Files (*.*)"
                                                  );
-
     }
     else  if(file_path.endsWith("hex") ==true)
     {
@@ -108,7 +106,7 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
     }
     ui->firmwareLineEdit->setText(fileName);
 #if DEBUG
-    qDebug()<<"ui->nodeListTableWidget->rowCount() = "<<ui->nodeListTableWidget->rowCount();
+    qDebug()<<"ui->nodeListTableWidget->rowCount()    = "<<ui->nodeListTableWidget->rowCount();
     qDebug()<<"ui->nodeListTableWidget->columnCount() = "<<ui->nodeListTableWidget->currentColumn();
 #endif
     //保存打开文件的历史记录
@@ -123,7 +121,6 @@ void MainWindow::on_openFirmwareFilePushButton_clicked()
 
 int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
 {
-
     for(int i=0;i<27;i++)
     {
         if(BaudRate == CANBus_Baudrate_table[i].BaudRate)
@@ -136,14 +133,12 @@ int MainWindow::CAN_GetBaudRateNum(unsigned int BaudRate)
 
 void MainWindow::cmdListTableWidget_edit(bool state)//表示当前cmdlsit是否可编辑
 {
-
     if(state == true)
     {
         for(int i =0;i<8;i++)
         {
             ui->cmdListTableWidget->item(i,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable);
             ui->cmdListTableWidget->item(i,0)->setFlags(Qt::ItemIsSelectable);
-
         }
     }
     else if(state == false)
@@ -161,7 +156,6 @@ void MainWindow::cmdListTableWidget_edit(bool state)//表示当前cmdlsit是否�
             ui->cmdListTableWidget->item(i,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable);
             ui->cmdListTableWidget->item(i,0)->setFlags(Qt::ItemIsSelectable);
         }
-
     }
 }
 void MainWindow::on_updateFirmwarePushButton_clicked()
@@ -176,7 +170,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
     time.start();
     Device_INFO  DEVICE_INFO;
     DEVICE_INFO.FW_Version.all  =  (uint32_t)0x00;
-    DEVICE_INFO.FW_TYPE.all     =  (uint32_t)(0x00);
+    DEVICE_INFO.FW_TYPE.all     =  (uint32_t)0x00;
     DEVICE_INFO.Device_addr.all =  (uint32_t)0x00;
     if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
     {
@@ -201,7 +195,7 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         }
     }
     uint16_t NodeAddr  = (uint16_t)0x00;
-    if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框
+    if(ui->allNodeCheckBox->isChecked())//选中所有节点复选框,暂时未进行测试
     {
         int row_count = 0;
         row_count = ui->nodeListTableWidget->rowCount();
@@ -267,63 +261,63 @@ void MainWindow::on_updateFirmwarePushButton_clicked()
         {
         case STM32F1_SER: //当前选中的是STM32系列芯片,烧写文件可为bin和hex文件,需要判断选中的文件类型;
         case STM32F4_SER:
-        {
-            if((ui->firmwareLineEdit->text().endsWith("bin") == false)&&(ui->firmwareLineEdit->text().endsWith("hex") == false))
-            {
-                line_num_str.sprintf("选中文件类型错误,当前芯片为STM32系列芯片,请选hex文件或者bin文件,行号:%d",__LINE__);
-                QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
-                return;
-            }
-            else if(ui->firmwareLineEdit->text().endsWith("bin") == true)
-            {
-                file_type = File_bin;
-#if DEBUG
-                qDebug()<<"当前芯片为STM32系列芯片,文件类型为bin文件 file_type = "<<file_type;
-#endif
-            }
-            else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
-            {
-                file_type = File_hex;
-#if DEBUG
-                qDebug()<<"当前芯片为STM32系列芯片,文件类型为hex文件 file_type ="<<file_type;
-#endif
-            }
-            else
-            {
-                line_num_str.sprintf("选中文件类型错误,当前芯片为STM32系列芯片,文件类型未知;行号:%d",__LINE__);
-                QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
-                return;
-            }
-        }
+			{
+				if((ui->firmwareLineEdit->text().endsWith("bin") == false)&&(ui->firmwareLineEdit->text().endsWith("hex") == false))
+				{
+					line_num_str.sprintf("选中文件类型错误,当前芯片为STM32系列芯片,请选hex文件或者bin文件,行号:%d",__LINE__);
+					QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
+					return;
+				}
+				else if(ui->firmwareLineEdit->text().endsWith("bin") == true)
+				{
+					file_type = File_bin;
+	#if DEBUG
+					qDebug()<<"当前芯片为STM32系列芯片,文件类型为bin文件 file_type = "<<file_type;
+	#endif
+				}
+				else if(ui->firmwareLineEdit->text().endsWith("hex") == true)
+				{
+					file_type = File_hex;
+	#if DEBUG
+					qDebug()<<"当前芯片为STM32系列芯片,文件类型为hex文件 file_type ="<<file_type;
+	#endif
+				}
+				else
+				{
+					line_num_str.sprintf("选中文件类型错误,当前芯片为STM32系列芯片,文件类型未知;行号:%d",__LINE__);
+					QMessageBox::warning(this,QStringLiteral("警告"),line_num_str);
+					return;
+				}
+			}
             break;
         case TMS320F280x_SER:
         case TMS320F2833x_SER:
-        {
-            if(ui->firmwareLineEdit->text().endsWith("hex") == true)
-            {
-                file_type = File_hex;
-#if DEBUG
-                qDebug()<<"当前芯片为TI的C2000系列芯片,文件类型为hex文件 file_type ="<<file_type;
-#endif
-            }
-            else if(ui->firmwareLineEdit->text().endsWith("bin") == true)
-            {
-                file_type = File_bin;
-            }
-            else
-            {
-                line_num_str.sprintf("选中文件类型错误,当前芯片为TI的C2000系列芯片,文件类型未知,行号:%d",__LINE__);
-                QMessageBox::warning(this, QStringLiteral("警告"),line_num_str);
-                return;
-            }
-        }
+			{
+				if(ui->firmwareLineEdit->text().endsWith("hex") == true)
+				{
+					file_type = File_hex;
+	#if DEBUG
+					qDebug()<<"当前芯片为TI的C2000系列芯片,文件类型为hex文件 file_type ="<<file_type;
+	#endif
+				}
+				else if(ui->firmwareLineEdit->text().endsWith("bin") == true)
+				{
+					file_type = File_bin;
+				}
+				else
+				{
+					line_num_str.sprintf("选中文件类型错误,当前芯片为TI的C2000系列芯片,文件类型未知,行号:%d",__LINE__);
+					QMessageBox::warning(this, QStringLiteral("警告"),line_num_str);
+					return;
+				}
+			}
             break;
         default:
-        {
-            line_num_str.sprintf("芯片类型未知,行号:%d",__LINE__);
-            QMessageBox::warning(this, QStringLiteral("警告"),line_num_str);
-            break;
-        }
+			{
+				line_num_str.sprintf("芯片类型未知,行号:%d",__LINE__);
+				QMessageBox::warning(this, QStringLiteral("警告"),line_num_str);
+				break;
+			}
         }
         ret = CAN_BL_Nodecheck(ui->deviceIndexComboBox->currentIndex(),
                                ui->channelIndexComboBox->currentIndex(),
@@ -1158,7 +1152,8 @@ void MainWindow::on_scanNodeAction_triggered()
     DEVICE_INFO.FW_TYPE.all         = (uint32_t)0x00;
     DEVICE_INFO.FW_Version.all      = (uint32_t)0x00;
     DEVICE_INFO.Device_addr.all     = (uint32_t)0x00;
-    int startAddr = 0,endAddr   = 0;
+    int startAddr = 0;
+    int endAddr   = 0;
     ScanDevRangeDialog *pScanDevRangeDialog = new ScanDevRangeDialog();
     //关于扫描地址的历史记录
     QString history_ini_path = QCoreApplication::applicationDirPath()+"/config.ini";
@@ -1332,7 +1327,7 @@ void MainWindow::on_Connect_USB_CAN_clicked()
     int ret;
     bool state;
     QString line_num_str = NULL;
-    QString file_path = QCoreApplication::applicationDirPath()+"/config.ini"; ;
+    QString file_path    = QCoreApplication::applicationDirPath()+"/config.ini";
     QSettings settings(file_path, QSettings::IniFormat);
     settings.beginGroup("chip");
     chip_list = settings.allKeys();
@@ -1713,7 +1708,7 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
     int read_num = 0;
     bool CAN_BL_write_flag = 0;
     UINT crc_temp = 0x0000;
-    int ret;
+        int ret                 = 0;
     bootloader_data Bootloader_data;
     //Bootloader_data部分成员进行赋值,后面的程序无需关注
     Bootloader_data.ExtId.bit.addr = NodeAddr;
@@ -1785,27 +1780,28 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
     {
         read_num = 0;
     }
-    switch (read_num) {
-    case 0:
-        return CAN_BL_ERR_TIME_OUT;
-        break;
-    case -1:
-        return CAN_ERR_USB_READ_FAIL;
-        break;
-    default:
-        ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
-        if(ret == -1)
+        switch (read_num)
         {
-            return CAN_ERR_USB_READ_FAIL;
-            VCI_ClearBuffer(4,DevIndex,CANIndex);
-        }
-        if(ret == 1)
-        {
-            //判断返回结果
-            if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
-            {
-                return CAN_BL_ERR_CMD;
-            }
+            case 0:
+                   return CAN_BL_ERR_TIME_OUT;
+                   break;
+            case -1:
+                    return CAN_ERR_USB_READ_FAIL;
+                    break;
+            default:
+                ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
+                            if(ret == -1)
+                            {
+                                return CAN_ERR_USB_READ_FAIL;
+                                VCI_ClearBuffer(4,DevIndex,CANIndex);
+                            }
+                            if(ret == 1)
+                            {
+                                 //判断返回结果
+                                if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                                    {
+                                        return CAN_BL_ERR_CMD;
+                                    }
 
         }
         break;
@@ -1874,26 +1870,27 @@ int MainWindow::CAN_BL_write(int DevIndex,int CANIndex,unsigned short NodeAddr,S
     {
         read_num = 0;
     }
-    switch (read_num) {
-    case 0:
-        return CAN_BL_ERR_TIME_OUT;
-        break;
-    case -1:
-        return CAN_ERR_USB_READ_FAIL;
-        break;
-    default:
-        ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
-        if(ret == -1)
-        {
-            return CAN_ERR_USB_READ_FAIL;
-            VCI_ClearBuffer(4,DevIndex,CANIndex);
-        }
-        if(ret == 1)
-        {
-            if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
-            {
-                return CAN_BL_ERR_CMD;
-            }
+         switch (read_num)
+         {
+             case 0:
+                    return CAN_BL_ERR_TIME_OUT;
+                    break;
+              case -1:
+                     return CAN_ERR_USB_READ_FAIL;
+                     break;
+             default:
+                 ret = VCI_Receive(4,DevIndex,CANIndex,&can_read_msg[0],1000,0);
+                             if(ret == -1)
+                             {
+                                 return CAN_ERR_USB_READ_FAIL;
+                                 VCI_ClearBuffer(4,DevIndex,CANIndex);
+                             }
+                             if(ret == 1)
+                             {
+                                 if(can_read_msg[0].ID != (UINT)(Bootloader_data.ExtId.bit.addr<<4|cmd_list.CmdSuccess))//表示反馈数据有效
+                                     {
+                                         return CAN_BL_ERR_CMD;
+                                     }
 
         }
         break;
@@ -1917,9 +1914,9 @@ int MainWindow::CAN_BL_excute(int DevIndex,int CANIndex,unsigned short NodeAddr,
     can_send_msg.RemoteFlag           = 0;
     can_send_msg.ExternFlag           = 1;
     can_send_msg.ID                   = Bootloader_data.ExtId.all;
-    can_send_msg.Data[0]              = ((Type>>16)&0x000000FF);
-    can_send_msg.Data[1]              = ((Type>>8) &0x000000FF);
-    can_send_msg.Data[2]              = ((Type>>0) &0x000000FF);
+    can_send_msg.Data[0]              = ((Type>>0x10)&0x000000FF);
+    can_send_msg.Data[1]              = ((Type>>0x08)&0x000000FF);
+    can_send_msg.Data[2]              = ((Type>>0x00)&0x000000FF);
     ret =  VCI_Transmit(4,DevIndex,CANIndex,&can_send_msg,1);
     if(ret == -1)
     {
@@ -1960,6 +1957,10 @@ unsigned char MainWindow::convertion(char *hex_data)
     {
         bin_data = *hex_data-CHAR_OFFSET;
     }
+    else if(*hex_data >= 'a'&&*hex_data <= 'f')
+    {
+        bin_data = *hex_data-'a';
+    }
     return bin_data;
 }
 void MainWindow::hex_to_bin(  char *hex_src, char *bin_dst,unsigned char len)
@@ -1972,6 +1973,9 @@ void MainWindow::hex_to_bin(  char *hex_src, char *bin_dst,unsigned char len)
         hex_src++;
     }
 }
+/**********************************************
+该函数主要是实现对hex文件的大小值的计算,有待验证,当前未使用
+***********************************************/
 unsigned long int MainWindow::hex_size_calc(QString str)
 {
     int ret                          = 0;
@@ -1979,8 +1983,8 @@ unsigned long int MainWindow::hex_size_calc(QString str)
     unsigned long  int  hex_size     = 0;
     char hex_buf[90];
     char bin_buf[40];
-    char data_type = 0xFF;
     int data_len = 0x00;
+   char data_type = 0xFF;
     QFile firmwareFile(str);
     if (firmwareFile.open(QFile::ReadOnly))
     {
