@@ -60,9 +60,9 @@ typedef struct _PACK_INFO
     unsigned short int Data[64];
 }PACK_INFO;//针对hex文件解码的结构体
 //---------------------------------------
-#define File_None   0xF0
-#define File_bin    0xF1
-#define File_hex    0xF2
+#define File_None   0xF0 //无
+#define File_bin    0xF1 //bin文件
+#define File_hex    0xF2 //hex文件
 //芯片型号宏定义
 //分为STM32F1,STM32F4,TMS320F280x,TMS320F2833x系列
 //当前所有芯片均支持hex文件和bin文件烧写
